@@ -1,4 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:vitacare_flutter/theme/vitacare_colors.dart';
+import 'package:vitacare_flutter/theme/vitacare_input_decoration.dart';
+import 'package:vitacare_flutter/widgets/vitacare_background.dart';
+import 'package:vitacare_flutter/widgets/vitacare_feature_tile.dart';
+import 'package:vitacare_flutter/widgets/vitacare_glass_card.dart';
+import 'package:vitacare_flutter/widgets/vitacare_logo.dart';
+import 'package:vitacare_flutter/widgets/vitacare_primary_button.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -7,17 +14,44 @@ class LoginPage extends StatefulWidget {
   State<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _LoginPageState extends State<LoginPage>
+    with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  late final AnimationController _animationController;
+  late final Animation<double> _fadeAnimation;
+  late final Animation<Offset> _slideAnimation;
 
   bool _obscurePassword = true;
 
   static final _emailRegex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
 
   @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    )..forward();
+    _fadeAnimation = CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeOutCubic,
+    );
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.08),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.easeOutCubic,
+      ),
+    );
+  }
+
+  @override
   void dispose() {
+    _animationController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -42,7 +76,7 @@ class _LoginPageState extends State<LoginPage> {
         SnackBar(
           content: Text(message),
           behavior: SnackBarBehavior.floating,
-          backgroundColor: const Color(0xFF103E69),
+          backgroundColor: VitacareColors.primary,
         ),
       );
   }
@@ -50,214 +84,245 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isWide = MediaQuery.of(context).size.width >= 900;
+    final contentWidth = isWide ? 980.0 : 520.0;
 
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFFE9F5FA),
-              Color(0xFFF7FBFC),
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                minHeight:
-                    MediaQuery.of(context).size.height -
-                    MediaQuery.of(context).padding.top -
-                    MediaQuery.of(context).padding.bottom -
-                    32,
-              ),
-              child: Center(
-                child: Container(
-                  constraints: const BoxConstraints(maxWidth: 460),
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(28),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color(0x14103E69),
-                        blurRadius: 22,
-                        offset: Offset(0, 10),
+      body: Stack(
+        children: [
+          const VitacareBackground(),
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight:
+                      MediaQuery.of(context).size.height -
+                      MediaQuery.of(context).padding.top -
+                      MediaQuery.of(context).padding.bottom -
+                      40,
+                ),
+                child: Center(
+                  child: FadeTransition(
+                    opacity: _fadeAnimation,
+                    child: SlideTransition(
+                      position: _slideAnimation,
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(maxWidth: contentWidth),
+                        child: VitacareGlassCard(
+                          child: isWide
+                              ? Row(
+                                  children: [
+                                    Expanded(child: _buildBrandPanel(theme)),
+                                    Expanded(child: _buildFormPanel(theme)),
+                                  ],
+                                )
+                              : _buildFormPanel(theme),
+                        ),
                       ),
-                    ],
-                  ),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const SizedBox(height: 4),
-                        _LogoSection(
-                          onImageError: () {
-                            return const _FallbackLogo();
-                          },
-                        ),
-                        const SizedBox(height: 24),
-                        Text(
-                          'Entrar',
-                          textAlign: TextAlign.center,
-                          style: theme.textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFF0D2A47),
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          'Acesse sua conta para acompanhar seu cuidado.',
-                          textAlign: TextAlign.center,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: const Color(0xFF4D657A),
-                          ),
-                        ),
-                        const SizedBox(height: 28),
-                        TextFormField(
-                          controller: _emailController,
-                          keyboardType: TextInputType.emailAddress,
-                          textInputAction: TextInputAction.next,
-                          decoration: _fieldDecoration(
-                            label: 'E-mail',
-                            hint: 'voce@exemplo.com',
-                            icon: Icons.mail_outline_rounded,
-                          ),
-                          validator: (value) {
-                            final email = (value ?? '').trim();
-                            if (email.isEmpty) {
-                              return 'Informe seu e-mail.';
-                            }
-                            if (!_emailRegex.hasMatch(email)) {
-                              return 'Digite um e-mail valido.';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 16),
-                        TextFormField(
-                          controller: _passwordController,
-                          obscureText: _obscurePassword,
-                          textInputAction: TextInputAction.done,
-                          onFieldSubmitted: (_) => _handleLogin(),
-                          decoration: _fieldDecoration(
-                            label: 'Senha',
-                            hint: 'Digite sua senha',
-                            icon: Icons.lock_outline_rounded,
-                          ).copyWith(
-                            suffixIcon: IconButton(
-                              tooltip:
-                                  _obscurePassword
-                                      ? 'Mostrar senha'
-                                      : 'Ocultar senha',
-                              onPressed: () {
-                                setState(() {
-                                  _obscurePassword = !_obscurePassword;
-                                });
-                              },
-                              icon: Icon(
-                                _obscurePassword
-                                    ? Icons.visibility_outlined
-                                    : Icons.visibility_off_outlined,
-                                color: const Color(0xFF466C86),
-                              ),
-                            ),
-                          ),
-                          validator: (value) {
-                            if ((value ?? '').trim().isEmpty) {
-                              return 'Informe sua senha.';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 8),
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: TextButton(
-                            onPressed:
-                                () => _showInfoSnackBar(
-                                  'Recuperacao de senha em breve.',
-                                ),
-                            style: TextButton.styleFrom(
-                              foregroundColor: const Color(0xFF108FB3),
-                            ),
-                            child: const Text('Esqueceu a senha?'),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        DecoratedBox(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: const [
-                              BoxShadow(
-                                color: Color(0x331396AA),
-                                blurRadius: 14,
-                                offset: Offset(0, 7),
-                              ),
-                            ],
-                            gradient: const LinearGradient(
-                              colors: [
-                                Color(0xFF1396AA),
-                                Color(0xFF0E5E97),
-                              ],
-                            ),
-                          ),
-                          child: ElevatedButton(
-                            onPressed: _handleLogin,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.transparent,
-                              shadowColor: Colors.transparent,
-                              foregroundColor: Colors.white,
-                              minimumSize: const Size(double.infinity, 54),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                            ),
-                            child: const Text(
-                              'Entrar',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 14),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              'Ainda nao tem conta?',
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                color: const Color(0xFF587085),
-                              ),
-                            ),
-                            TextButton(
-                              onPressed:
-                                  () => _showInfoSnackBar(
-                                    'Cadastro em breve.',
-                                  ),
-                              style: TextButton.styleFrom(
-                                foregroundColor: const Color(0xFF0E6C9B),
-                              ),
-                              child: const Text('Cadastrar'),
-                            ),
-                          ],
-                        ),
-                      ],
                     ),
                   ),
                 ),
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBrandPanel(ThemeData theme) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(36, 40, 30, 40),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [VitacareColors.primary, VitacareColors.primaryStrong],
         ),
       ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          _buildBrandContent(
+            theme,
+            textColor: Colors.white,
+            supportColor: Colors.white.withValues(alpha: 0.78),
+          ),
+          const SizedBox(height: 32),
+          const VitacareFeatureTile(
+            icon: Icons.favorite_outline_rounded,
+            title: 'Rotina segura',
+            description: 'Acompanhe idosos e pacientes cronicos com clareza e cuidado continuo.',
+            light: true,
+          ),
+          const SizedBox(height: 14),
+          const VitacareFeatureTile(
+            icon: Icons.monitor_heart_outlined,
+            title: 'Visao centralizada',
+            description: 'Sinais, historico e observacoes em uma experiencia simples para a equipe.',
+            light: true,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFormPanel(ThemeData theme) {
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _buildBrandContent(
+              theme,
+              textColor: VitacareColors.textStrong,
+              supportColor: VitacareColors.textSoft,
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Entrar',
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: VitacareColors.textStrong,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Use seu e-mail profissional para acessar a central Vitacare.',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: VitacareColors.textSoft,
+              ),
+            ),
+            const SizedBox(height: 28),
+            TextFormField(
+              controller: _emailController,
+              keyboardType: TextInputType.emailAddress,
+              textInputAction: TextInputAction.next,
+              decoration: _fieldDecoration(
+                label: 'E-mail',
+                hint: 'voce@clinica.com',
+                icon: Icons.mail_outline_rounded,
+              ),
+              validator: (value) {
+                final email = (value ?? '').trim();
+                if (email.isEmpty) {
+                  return 'Informe seu e-mail.';
+                }
+                if (!_emailRegex.hasMatch(email)) {
+                  return 'Digite um e-mail valido.';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _passwordController,
+              obscureText: _obscurePassword,
+              textInputAction: TextInputAction.done,
+              onFieldSubmitted: (_) => _handleLogin(),
+              decoration: _fieldDecoration(
+                label: 'Senha',
+                hint: 'Digite sua senha',
+                icon: Icons.lock_outline_rounded,
+              ).copyWith(
+                suffixIcon: IconButton(
+                  tooltip: _obscurePassword ? 'Mostrar senha' : 'Ocultar senha',
+                  onPressed: () {
+                    setState(() {
+                      _obscurePassword = !_obscurePassword;
+                    });
+                  },
+                  icon: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 180),
+                    child: Icon(
+                      _obscurePassword
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                      key: ValueKey(_obscurePassword),
+                      color: VitacareColors.textMuted,
+                    ),
+                  ),
+                ),
+              ),
+              validator: (value) {
+                if ((value ?? '').trim().isEmpty) {
+                  return 'Informe sua senha.';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 10),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: () {
+                  _showInfoSnackBar('Recuperacao de senha em breve.');
+                },
+                child: const Text('Esqueceu a senha?'),
+              ),
+            ),
+            const SizedBox(height: 12),
+            VitacarePrimaryButton(
+              onPressed: _handleLogin,
+              label: 'Entrar',
+            ),
+            const SizedBox(height: 18),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'Ainda nao tem conta?',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: VitacareColors.textSoft,
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    _showInfoSnackBar('Cadastro em breve.');
+                  },
+                  child: const Text('Cadastrar'),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBrandContent(
+    ThemeData theme, {
+    required Color textColor,
+    required Color supportColor,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        const VitacareLogo(),
+        const SizedBox(height: 18),
+        Text(
+          'Cuidado inteligente e humano para sua operacao.',
+          style: theme.textTheme.headlineSmall?.copyWith(
+            color: textColor,
+            fontWeight: FontWeight.w700,
+            height: 1.18,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 12),
+        Text(
+          'A plataforma para acompanhamento continuo de pacientes cronicos e idosos.',
+          style: theme.textTheme.bodyLarge?.copyWith(
+            color: supportColor,
+            height: 1.5,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ],
     );
   }
 
@@ -266,77 +331,7 @@ class _LoginPageState extends State<LoginPage> {
     required String hint,
     required IconData icon,
   }) {
-    const borderColor = Color(0xFFCEE5EE);
-
-    return InputDecoration(
-      labelText: label,
-      hintText: hint,
-      prefixIcon: Icon(icon, color: const Color(0xFF466C86)),
-      filled: true,
-      fillColor: const Color(0xFFFBFDFE),
-      contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: borderColor),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: borderColor),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: Color(0xFF1396AA), width: 1.4),
-      ),
-      errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: Color(0xFFCD4753)),
-      ),
-      focusedErrorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: Color(0xFFCD4753), width: 1.3),
-      ),
-    );
-  }
-}
-
-class _LogoSection extends StatelessWidget {
-  const _LogoSection({required this.onImageError});
-
-  final Widget Function() onImageError;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Image.asset(
-          'assets/images/vitacare_logo.png',
-          height: 92,
-          fit: BoxFit.contain,
-          errorBuilder: (_, error, stackTrace) => onImageError(),
-        ),
-      ],
-    );
-  }
-}
-
-class _FallbackLogo extends StatelessWidget {
-  const _FallbackLogo();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 84,
-      width: 84,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF1396AA), Color(0xFF103E69)],
-        ),
-      ),
-      child: const Icon(Icons.favorite_rounded, color: Colors.white, size: 42),
-    );
+    return vitacareInputDecoration(label: label, hint: hint, icon: icon);
   }
 }
 
@@ -356,35 +351,33 @@ class LoginSuccessPage extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                height: 72,
-                width: 72,
+                height: 76,
+                width: 76,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: const Color(0xFF18A5A0).withValues(alpha: 0.15),
+                  color: VitacareColors.accent.withValues(alpha: 0.12),
                 ),
                 child: const Icon(
                   Icons.check_circle_rounded,
-                  size: 44,
-                  color: Color(0xFF119D98),
+                  size: 46,
+                  color: VitacareColors.accent,
                 ),
               ),
               const SizedBox(height: 16),
-              const Text(
+              Text(
                 'Bem-vindo ao Vitacare!',
-                style: TextStyle(
-                  fontSize: 24,
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.w700,
-                  color: Color(0xFF0D2A47),
+                  color: VitacareColors.textStrong,
                 ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 10),
-              const Text(
+              Text(
                 'Login validado com sucesso.\nEsta e uma tela placeholder para a apresentacao.',
-                style: TextStyle(
-                  fontSize: 15,
-                  color: Color(0xFF4C667D),
-                  height: 1.4,
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: VitacareColors.textSoft,
+                  height: 1.5,
                 ),
                 textAlign: TextAlign.center,
               ),
