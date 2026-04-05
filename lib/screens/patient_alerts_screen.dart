@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:vitacare_flutter/core/vitacare_feedback.dart';
+import 'package:vitacare_flutter/core/vitacare_routes.dart';
 import 'package:vitacare_flutter/models/health_record.dart';
 import 'package:vitacare_flutter/models/patient.dart';
 import 'package:vitacare_flutter/providers/patient_provider.dart';
@@ -18,7 +19,9 @@ class PatientAlertsScreen extends StatelessWidget {
 
     return VitacarePageScaffold(
       title: 'Alertas e Status do Paciente',
-      selectedRoute: '/alerts',
+      subtitle:
+          'Monitore pacientes em prioridade alta e acione orientacoes de acompanhamento quando necessario.',
+      selectedRoute: VitacareRoutes.alerts,
       child: VitacareGlassCard(
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -26,17 +29,10 @@ class PatientAlertsScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Pacientes com prioridade alta (${alerts.length})',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                'Pacientes com prioridade alta: ${alerts.length}',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: VitacareColors.textStrong,
                       fontWeight: FontWeight.w700,
-                    ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Use esta listagem para monitorar pacientes com risco elevado e apoiar a coordenacao entre cuidadores e equipe.',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: VitacareColors.textSoft,
                     ),
               ),
               const SizedBox(height: 12),

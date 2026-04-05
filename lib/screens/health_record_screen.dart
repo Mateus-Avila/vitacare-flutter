@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:vitacare_flutter/core/vitacare_feedback.dart';
+import 'package:vitacare_flutter/core/vitacare_routes.dart';
 import 'package:vitacare_flutter/models/health_record.dart';
 import 'package:vitacare_flutter/models/patient.dart';
 import 'package:vitacare_flutter/providers/patient_provider.dart';
@@ -92,7 +93,7 @@ class _HealthRecordScreenState extends State<HealthRecordScreen> {
         cancelLabel: 'Fechar',
       );
       if (openAlerts && mounted) {
-        Navigator.pushReplacementNamed(context, '/alerts');
+        Navigator.pushReplacementNamed(context, VitacareRoutes.alerts);
       }
       return;
     }
@@ -109,7 +110,9 @@ class _HealthRecordScreenState extends State<HealthRecordScreen> {
 
     return VitacarePageScaffold(
       title: 'Registro de Dados de Saude',
-      selectedRoute: '/records/register',
+      subtitle:
+          'Registre sinais clinicos e observacoes da visita para manter o historico do cuidado atualizado.',
+      selectedRoute: VitacareRoutes.healthRecord,
       child: patients.isEmpty
           ? _buildEmptyState(context)
           : SingleChildScrollView(
@@ -123,21 +126,7 @@ class _HealthRecordScreenState extends State<HealthRecordScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            'Novo registro clinico',
-                            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                  color: VitacareColors.textStrong,
-                                ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Registre pressao arterial, glicemia e observacoes para apoiar a equipe no acompanhamento continuo do paciente.',
-                            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                  color: VitacareColors.textSoft,
-                                ),
-                          ),
-                          const SizedBox(height: 18),
+                          const SizedBox(height: 4),
                           DropdownButtonFormField<String>(
                             key: ValueKey<String?>(_selectedPatientId),
                             initialValue: _selectedPatientId,
@@ -267,7 +256,7 @@ class _HealthRecordScreenState extends State<HealthRecordScreen> {
                 FilledButton(
                   onPressed: () => Navigator.pushReplacementNamed(
                     context,
-                    '/patients/register',
+                    VitacareRoutes.patientRegistration,
                   ),
                   child: const Text('Ir para cadastro'),
                 ),

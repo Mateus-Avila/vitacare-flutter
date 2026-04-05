@@ -88,7 +88,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'Informe seu e-mail para simular a recuperacao de senha exigida pelo RF005.',
+                              'Informe seu e-mail para solicitar a recuperacao de senha da demonstracao academica.',
                               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                     color: VitacareColors.textSoft,
                                   ),

@@ -22,60 +22,62 @@ class VitacareFeatureTile extends StatelessWidget {
         ? Colors.white.withValues(alpha: 0.78)
         : VitacareColors.textSoft;
 
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: light
-            ? Colors.white.withValues(alpha: 0.08)
-            : VitacareColors.surfaceTint,
+    return Card(
+      color: light
+          ? Colors.white.withValues(alpha: 0.08)
+          : VitacareColors.surfaceTint,
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(
+        side: BorderSide(
           color: light
               ? Colors.white.withValues(alpha: 0.12)
               : VitacareColors.border,
         ),
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              color: light
-                  ? VitacareColors.accent.withValues(alpha: 0.22)
-                  : VitacareColors.accent.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(14),
+      child: Padding(
+      padding: const EdgeInsets.all(18),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: light
+                    ? VitacareColors.accent.withValues(alpha: 0.22)
+                    : VitacareColors.accent.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Icon(
+                icon,
+                color: light ? Colors.white : VitacareColors.primary,
+              ),
             ),
-            child: Icon(
-              icon,
-              color: light ? Colors.white : VitacareColors.primary,
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: titleColor,
-                    fontWeight: FontWeight.w700,
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: titleColor,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  description,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: bodyColor,
-                    height: 1.45,
+                  const SizedBox(height: 6),
+                  Text(
+                    description,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: bodyColor,
+                      height: 1.45,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

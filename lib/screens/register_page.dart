@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:vitacare_flutter/core/vitacare_feedback.dart';
+import 'package:vitacare_flutter/core/vitacare_routes.dart';
 import 'package:vitacare_flutter/core/vitacare_validators.dart';
 import 'package:vitacare_flutter/providers/auth_provider.dart';
 import 'package:vitacare_flutter/theme/vitacare_colors.dart';
@@ -69,7 +70,11 @@ class _RegisterPageState extends State<RegisterPage> {
     }
 
     showVitacareSnackBar(context, result.message);
-    Navigator.pushNamedAndRemoveUntil(context, '/dashboard', (_) => false);
+    Navigator.pushNamedAndRemoveUntil(
+      context,
+      VitacareRoutes.dashboard,
+      (_) => false,
+    );
   }
 
   @override

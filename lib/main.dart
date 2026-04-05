@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:vitacare_flutter/core/vitacare_routes.dart';
 import 'package:vitacare_flutter/providers/auth_provider.dart';
 import 'package:vitacare_flutter/providers/patient_provider.dart';
 import 'package:vitacare_flutter/screens/about_screen.dart';
@@ -29,45 +30,29 @@ void main() {
 class VitacareApp extends StatelessWidget {
   const VitacareApp({super.key});
 
-  static const Set<String> _publicRoutes = <String>{
-    '/',
-    '/register',
-    '/forgot-password',
-  };
-
-  static const Set<String> _privateRoutes = <String>{
-    '/dashboard',
-    '/patients/register',
-    '/patients/list',
-    '/records/register',
-    '/records/history',
-    '/alerts',
-    '/about',
-  };
-
   Widget _buildPage(String routeName, {Object? arguments}) {
     switch (routeName) {
-      case '/':
+      case VitacareRoutes.login:
         return const LoginPage();
-      case '/register':
+      case VitacareRoutes.register:
         return const RegisterPage();
-      case '/forgot-password':
+      case VitacareRoutes.forgotPassword:
         return const ForgotPasswordPage();
-      case '/dashboard':
+      case VitacareRoutes.dashboard:
         return const DashboardScreen();
-      case '/patients/register':
+      case VitacareRoutes.patientRegistration:
         return const PatientRegistrationScreen();
-      case '/patients/list':
+      case VitacareRoutes.patientList:
         return const PatientListScreen();
-      case '/records/register':
+      case VitacareRoutes.healthRecord:
         return const HealthRecordScreen();
-      case '/records/history':
+      case VitacareRoutes.recordsHistory:
         return RecordsHistoryScreen(
           initialPatientId: arguments is String ? arguments : null,
         );
-      case '/alerts':
+      case VitacareRoutes.alerts:
         return const PatientAlertsScreen();
-      case '/about':
+      case VitacareRoutes.about:
         return const AboutScreen();
       default:
         return const LoginPage();
@@ -79,24 +64,36 @@ class VitacareApp extends StatelessWidget {
     RouteSettings settings,
   ) {
     final AuthProvider authProvider = context.read<AuthProvider>();
-    final String requestedRoute = settings.name ?? '/';
+    final String requestedRoute = settings.name ?? VitacareRoutes.login;
     final bool routeExists =
-        _publicRoutes.contains(requestedRoute) ||
-        _privateRoutes.contains(requestedRoute);
-    final bool isPublicRoute = _publicRoutes.contains(requestedRoute);
+        VitacareRoutes.publicRoutes.contains(requestedRoute) ||
+        VitacareRoutes.privateRoutes.contains(requestedRoute);
+    final bool isPublicRoute = VitacareRoutes.publicRoutes.contains(
+      requestedRoute,
+    );
 
     String resolvedRoute = requestedRoute;
     if (!routeExists) {
-      resolvedRoute = authProvider.isLoggedIn ? '/dashboard' : '/';
+      resolvedRoute = authProvider.isLoggedIn
+          ? VitacareRoutes.dashboard
+          : VitacareRoutes.login;
     } else if (!authProvider.isLoggedIn && !isPublicRoute) {
-      resolvedRoute = '/';
+      resolvedRoute = VitacareRoutes.login;
     } else if (authProvider.isLoggedIn && isPublicRoute) {
-      resolvedRoute = '/dashboard';
+      resolvedRoute = VitacareRoutes.dashboard;
     }
 
-    return MaterialPageRoute<void>(
-      settings: RouteSettings(name: resolvedRoute, arguments: settings.arguments),
-      builder: (_) => _buildPage(resolvedRoute, arguments: settings.arguments),
+    return PageRouteBuilder<void>(
+      settings: RouteSettings(
+        name: resolvedRoute,
+        arguments: settings.arguments,
+      ),
+      pageBuilder: (context, animation, secondaryAnimation) => FadeTransition(
+        opacity: CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
+        child: _buildPage(resolvedRoute, arguments: settings.arguments),
+      ),
+      transitionDuration: const Duration(milliseconds: 220),
+      reverseTransitionDuration: const Duration(milliseconds: 180),
     );
   }
 
@@ -113,20 +110,25 @@ class VitacareApp extends StatelessWidget {
             debugShowCheckedModeBanner: false,
             title: 'Vitacare',
             theme: ThemeData(
-              textTheme: GoogleFonts.montserratTextTheme(),
               colorScheme: ColorScheme.fromSeed(
                 seedColor: VitacareColors.primary,
+                brightness: Brightness.light,
+              ).copyWith(
                 primary: VitacareColors.primary,
+                onPrimary: Colors.white,
                 secondary: VitacareColors.accent,
                 surface: Colors.white,
+                onSurface: VitacareColors.textStrong,
+                outline: VitacareColors.border,
               ),
+              textTheme: GoogleFonts.montserratTextTheme(),
               useMaterial3: true,
               scaffoldBackgroundColor: VitacareColors.background,
               appBarTheme: const AppBarTheme(
-                backgroundColor: Colors.transparent,
-                elevation: 0,
+                backgroundColor: VitacareColors.background,
                 foregroundColor: VitacareColors.textStrong,
-                centerTitle: true,
+                centerTitle: false,
+                scrolledUnderElevation: 0,
               ),
               inputDecorationTheme: InputDecorationTheme(
                 filled: true,
@@ -150,15 +152,79 @@ class VitacareApp extends StatelessWidget {
                     width: 1.4,
                   ),
                 ),
+                errorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(18),
+                  borderSide: const BorderSide(color: Colors.redAccent),
+                ),
+                focusedErrorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(18),
+                  borderSide: const BorderSide(
+                    color: Colors.redAccent,
+                    width: 1.4,
+                  ),
+                ),
+              ),
+              cardTheme: CardThemeData(
+                elevation: 0,
+                color: Colors.white,
+                surfaceTintColor: Colors.white,
+                margin: EdgeInsets.zero,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(28),
+                  side: const BorderSide(color: VitacareColors.border),
+                ),
+              ),
+              navigationDrawerTheme: const NavigationDrawerThemeData(
+                backgroundColor: Colors.white,
+                elevation: 0,
+                indicatorColor: VitacareColors.surfaceTint,
+              ),
+              filledButtonTheme: FilledButtonThemeData(
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size(0, 56),
+                  backgroundColor: VitacareColors.primary,
+                  foregroundColor: Colors.white,
+                  textStyle: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                ),
+              ),
+              outlinedButtonTheme: OutlinedButtonThemeData(
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(0, 48),
+                  foregroundColor: VitacareColors.primary,
+                  side: const BorderSide(color: VitacareColors.border),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
               ),
               textButtonTheme: TextButtonThemeData(
                 style: TextButton.styleFrom(
-                  foregroundColor: VitacareColors.accent,
+                  foregroundColor: VitacareColors.primary,
                   textStyle: const TextStyle(fontWeight: FontWeight.w600),
                 ),
               ),
               snackBarTheme: const SnackBarThemeData(
                 behavior: SnackBarBehavior.floating,
+                backgroundColor: VitacareColors.primary,
+                contentTextStyle: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              dialogTheme: DialogThemeData(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
+                ),
+              ),
+              dividerTheme: const DividerThemeData(
+                color: VitacareColors.border,
+                thickness: 1,
               ),
             ),
             home: authProvider.isLoggedIn

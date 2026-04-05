@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:vitacare_flutter/core/vitacare_feedback.dart';
+import 'package:vitacare_flutter/core/vitacare_routes.dart';
 import 'package:vitacare_flutter/core/vitacare_validators.dart';
 import 'package:vitacare_flutter/providers/auth_provider.dart';
 import 'package:vitacare_flutter/theme/vitacare_colors.dart';
@@ -82,7 +83,7 @@ class _LoginPageState extends State<LoginPage>
     }
 
     showVitacareSnackBar(context, result.message);
-    Navigator.pushReplacementNamed(context, '/dashboard');
+    Navigator.pushReplacementNamed(context, VitacareRoutes.dashboard);
   }
 
   @override
@@ -114,13 +115,13 @@ class _LoginPageState extends State<LoginPage>
                       child: ConstrainedBox(
                         constraints: BoxConstraints(maxWidth: contentWidth),
                         child: VitacareGlassCard(
-                          child: isWide
-                              ? Row(
-                                  children: [
-                                    Expanded(child: _buildBrandPanel(theme)),
-                                    Expanded(child: _buildFormPanel(theme)),
-                                  ],
-                                )
+                              child: isWide
+                                  ? Row(
+                                      children: [
+                                        Expanded(child: _buildBrandPanel(theme)),
+                                        Expanded(child: _buildFormPanel(theme)),
+                                      ],
+                                    )
                               : _buildFormPanel(theme),
                         ),
                       ),
@@ -198,7 +199,7 @@ class _LoginPageState extends State<LoginPage>
             ),
             const SizedBox(height: 6),
             Text(
-              'Acesse a demonstracao do VitaCare para acompanhar pacientes cronicos, idosos e rotinas de cuidado.',
+              'Acesse o VitaCare para acompanhar pacientes cronicos, idosos e rotinas de cuidado com navegacao simples e organizada.',
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: VitacareColors.textSoft,
               ),
@@ -266,7 +267,7 @@ class _LoginPageState extends State<LoginPage>
               alignment: Alignment.centerRight,
               child: TextButton(
                 onPressed: () {
-                  Navigator.pushNamed(context, '/forgot-password');
+                  Navigator.pushNamed(context, VitacareRoutes.forgotPassword);
                 },
                 child: const Text('Esqueceu a senha?'),
               ),
@@ -288,7 +289,7 @@ class _LoginPageState extends State<LoginPage>
                 ),
                 TextButton(
                   onPressed: () {
-                    Navigator.pushNamed(context, '/register');
+                    Navigator.pushNamed(context, VitacareRoutes.register);
                   },
                   child: const Text('Cadastrar'),
                 ),

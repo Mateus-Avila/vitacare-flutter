@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:vitacare_flutter/core/vitacare_formatters.dart';
 import 'package:vitacare_flutter/core/vitacare_feedback.dart';
+import 'package:vitacare_flutter/core/vitacare_routes.dart';
 import 'package:vitacare_flutter/models/patient.dart';
 import 'package:vitacare_flutter/providers/patient_provider.dart';
 import 'package:vitacare_flutter/theme/vitacare_colors.dart';
@@ -18,7 +19,9 @@ class PatientListScreen extends StatelessWidget {
 
     return VitacarePageScaffold(
       title: 'Listagem de Pacientes',
-      selectedRoute: '/patients/list',
+      subtitle:
+          'Visualize os pacientes cadastrados, seus dados principais e o status atual do acompanhamento.',
+      selectedRoute: VitacareRoutes.patientList,
       child: VitacareGlassCard(
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -26,17 +29,10 @@ class PatientListScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Listagem principal de pacientes (${patients.length})',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                'Pacientes cadastrados: ${patients.length}',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: VitacareColors.textStrong,
                       fontWeight: FontWeight.w700,
-                    ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Esta tela demonstra o RF007 com ListView e apresenta os pacientes acompanhados na base estatica do VitaCare.',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: VitacareColors.textSoft,
                     ),
               ),
               const SizedBox(height: 12),
@@ -96,7 +92,7 @@ class _PatientTile extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 24,
-                backgroundColor: VitacareColors.accent.withValues(alpha: 0.16),
+              backgroundColor: VitacareColors.accent.withValues(alpha: 0.16),
                 child: Text(
                   patient.name.isNotEmpty ? patient.name[0].toUpperCase() : '?',
                   style: const TextStyle(
@@ -178,7 +174,11 @@ class _PatientTile extends StatelessWidget {
           FilledButton(
             onPressed: () {
               Navigator.pop(dialogContext);
-              Navigator.pushNamed(context, '/records/history', arguments: patient.id);
+              Navigator.pushNamed(
+                context,
+                VitacareRoutes.recordsHistory,
+                arguments: patient.id,
+              );
               showVitacareSnackBar(
                 context,
                 'Historico filtrado para ${patient.name}.',

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:vitacare_flutter/core/vitacare_feedback.dart';
+import 'package:vitacare_flutter/core/vitacare_routes.dart';
 import 'package:vitacare_flutter/providers/patient_provider.dart';
-import 'package:vitacare_flutter/theme/vitacare_colors.dart';
 import 'package:vitacare_flutter/theme/vitacare_input_decoration.dart';
 import 'package:vitacare_flutter/widgets/vitacare_glass_card.dart';
 import 'package:vitacare_flutter/widgets/vitacare_page_scaffold.dart';
@@ -92,7 +92,9 @@ class _PatientRegistrationScreenState extends State<PatientRegistrationScreen> {
   Widget build(BuildContext context) {
     return VitacarePageScaffold(
       title: 'Cadastro de Paciente',
-      selectedRoute: '/patients/register',
+      subtitle:
+          'Registre os dados basicos do paciente e do cuidador para iniciar o acompanhamento no sistema.',
+      selectedRoute: VitacareRoutes.patientRegistration,
       child: SingleChildScrollView(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 760),
@@ -104,21 +106,7 @@ class _PatientRegistrationScreenState extends State<PatientRegistrationScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Novo paciente',
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: VitacareColors.textStrong,
-                          ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Cadastre pacientes idosos ou cronicos para centralizar informacoes basicas de cuidado e acompanhamento continuo.',
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: VitacareColors.textSoft,
-                          ),
-                    ),
-                    const SizedBox(height: 22),
+                    const SizedBox(height: 4),
                     TextFormField(
                       controller: _nameController,
                       decoration: vitacareInputDecoration(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:vitacare_flutter/core/vitacare_formatters.dart';
+import 'package:vitacare_flutter/core/vitacare_routes.dart';
 import 'package:vitacare_flutter/models/health_record.dart';
 import 'package:vitacare_flutter/models/patient.dart';
 import 'package:vitacare_flutter/providers/patient_provider.dart';
@@ -37,28 +38,15 @@ class _RecordsHistoryScreenState extends State<RecordsHistoryScreen> {
 
     return VitacarePageScaffold(
       title: 'Historico de Registros',
-      selectedRoute: '/records/history',
+      subtitle:
+          'Consulte a evolucao dos registros de saude e filtre por paciente para acompanhar a serie historica.',
+      selectedRoute: VitacareRoutes.recordsHistory,
       child: VitacareGlassCard(
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Evolucao dos pacientes',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      color: VitacareColors.textStrong,
-                      fontWeight: FontWeight.w700,
-                    ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Consulte a serie de registros mockados do VitaCare e filtre por paciente para acompanhar a evolucao clinica.',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: VitacareColors.textSoft,
-                    ),
-              ),
-              const SizedBox(height: 12),
               DropdownButtonFormField<String?>(
                 key: ValueKey<String?>(_selectedPatientId),
                 initialValue: _selectedPatientId,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:vitacare_flutter/core/vitacare_routes.dart';
 import 'package:vitacare_flutter/theme/vitacare_colors.dart';
 import 'package:vitacare_flutter/widgets/vitacare_glass_card.dart';
 import 'package:vitacare_flutter/widgets/vitacare_page_scaffold.dart';
@@ -10,7 +11,9 @@ class AboutScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return VitacarePageScaffold(
       title: 'Sobre o VitaCare',
-      selectedRoute: '/about',
+      subtitle:
+          'Resumo institucional do projeto academico, seu contexto de uso e o escopo desta demonstracao.',
+      selectedRoute: VitacareRoutes.about,
       child: SingleChildScrollView(
         child: Center(
           child: ConstrainedBox(
@@ -52,7 +55,7 @@ class AboutScreen extends StatelessWidget {
                     _AboutSection(
                       title: 'Funcionalidades demonstradas nesta etapa',
                       content:
-                          'O aplicativo apresenta login, cadastro, recuperacao de senha e tela sobre, alem de cinco modulos especificos: cadastro de paciente, listagem de pacientes, registro de dados de saude, historico de registros e alertas/status. Esses modulos demonstram o fluxo principal do VitaCare usando dados mockados.',
+                          'O aplicativo apresenta login, cadastro, recuperacao de senha e tela sobre, alem de cinco modulos especificos: cadastro de paciente, listagem de pacientes, registro de dados de saude, historico de registros e alertas/status. Esses modulos demonstram o fluxo principal do VitaCare para documentacao e acompanhamento do cuidado.',
                     ),
                     const SizedBox(height: 18),
                     _AboutSection(
@@ -76,7 +79,7 @@ class AboutScreen extends StatelessWidget {
                         border: Border.all(color: VitacareColors.border),
                       ),
                       child: const Text(
-                        'Observacao: nesta entrega academica, autenticacao, pacientes, registros e alertas sao simulados. O objetivo atual e demonstrar interface, navegacao, caixas de dialogo e listagem de dados de acordo com os requisitos do projeto.',
+                        'Observacao: nesta entrega academica, os dados sao apresentados em ambiente demonstrativo. O objetivo atual e validar interface, navegacao, formularios, listagens e acompanhamento do cuidado conforme os requisitos do projeto.',
                         style: TextStyle(
                           color: VitacareColors.textStrong,
                           fontWeight: FontWeight.w600,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:vitacare_flutter/core/vitacare_routes.dart';
 import 'package:vitacare_flutter/core/vitacare_feedback.dart';
 import 'package:vitacare_flutter/providers/auth_provider.dart';
 import 'package:vitacare_flutter/theme/vitacare_colors.dart';
@@ -9,85 +10,147 @@ class VitacareAppDrawer extends StatelessWidget {
   const VitacareAppDrawer({
     super.key,
     required this.selectedRoute,
+    this.embedded = false,
   });
 
   final String selectedRoute;
+  final bool embedded;
 
   @override
   Widget build(BuildContext context) {
-    return Drawer(
-      child: SafeArea(
+    final Widget content = _VitacareNavigationContent(
+      selectedRoute: selectedRoute,
+      embedded: embedded,
+    );
+
+    if (embedded) {
+      return content;
+    }
+
+    return Drawer(child: content);
+  }
+}
+
+class _VitacareNavigationContent extends StatelessWidget {
+  const _VitacareNavigationContent({
+    required this.selectedRoute,
+    required this.embedded,
+  });
+
+  final String selectedRoute;
+  final bool embedded;
+
+  @override
+  Widget build(BuildContext context) {
+    final List<_NavigationDestinationData> destinations =
+        const <_NavigationDestinationData>[
+          _NavigationDestinationData(
+            label: 'Dashboard',
+            route: VitacareRoutes.dashboard,
+            icon: Icons.dashboard_outlined,
+          ),
+          _NavigationDestinationData(
+            label: 'Cadastro de Paciente',
+            route: VitacareRoutes.patientRegistration,
+            icon: Icons.person_add_alt_1_outlined,
+          ),
+          _NavigationDestinationData(
+            label: 'Listagem de Pacientes',
+            route: VitacareRoutes.patientList,
+            icon: Icons.list_alt_rounded,
+          ),
+          _NavigationDestinationData(
+            label: 'Registro de Dados',
+            route: VitacareRoutes.healthRecord,
+            icon: Icons.monitor_heart_outlined,
+          ),
+          _NavigationDestinationData(
+            label: 'Historico de Registros',
+            route: VitacareRoutes.recordsHistory,
+            icon: Icons.history_rounded,
+          ),
+          _NavigationDestinationData(
+            label: 'Alertas e Status',
+            route: VitacareRoutes.alerts,
+            icon: Icons.warning_amber_rounded,
+          ),
+          _NavigationDestinationData(
+            label: 'Sobre o App',
+            route: VitacareRoutes.about,
+            icon: Icons.info_outline_rounded,
+          ),
+        ];
+
+    final int selectedIndex = destinations.indexWhere(
+      (destination) => destination.route == selectedRoute,
+    );
+
+    return SafeArea(
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(embedded ? 12 : 8, 16, embedded ? 12 : 8, 12),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const Padding(
-              padding: EdgeInsets.fromLTRB(16, 18, 16, 14),
-              child: VitacareLogo(height: 58),
+              padding: EdgeInsets.fromLTRB(12, 8, 12, 16),
+              child: VitacareLogo(height: 54),
             ),
-            const Divider(height: 0),
-            _DrawerRouteTile(
-              icon: Icons.dashboard_outlined,
-              label: 'Dashboard',
-              route: '/dashboard',
-              selectedRoute: selectedRoute,
-            ),
-            _DrawerRouteTile(
-              icon: Icons.person_add_alt_1_outlined,
-              label: 'Cadastro de Paciente',
-              route: '/patients/register',
-              selectedRoute: selectedRoute,
-            ),
-            _DrawerRouteTile(
-              icon: Icons.list_alt_rounded,
-              label: 'Listagem de Pacientes',
-              route: '/patients/list',
-              selectedRoute: selectedRoute,
-            ),
-            _DrawerRouteTile(
-              icon: Icons.monitor_heart_outlined,
-              label: 'Registro de Dados',
-              route: '/records/register',
-              selectedRoute: selectedRoute,
-            ),
-            _DrawerRouteTile(
-              icon: Icons.history_rounded,
-              label: 'Historico de Registros',
-              route: '/records/history',
-              selectedRoute: selectedRoute,
-            ),
-            _DrawerRouteTile(
-              icon: Icons.warning_amber_rounded,
-              label: 'Alertas e Status',
-              route: '/alerts',
-              selectedRoute: selectedRoute,
-            ),
-            _DrawerRouteTile(
-              icon: Icons.info_outline_rounded,
-              label: 'Sobre o App',
-              route: '/about',
-              selectedRoute: selectedRoute,
-            ),
-            const Spacer(),
-            const Divider(height: 0),
-            ListTile(
-              leading: const Icon(
-                Icons.logout_rounded,
-                color: VitacareColors.primary,
+            Text(
+              'Navegacao principal',
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                color: VitacareColors.textSoft,
+                fontWeight: FontWeight.w700,
               ),
-              title: const Text('Sair'),
-              onTap: () async {
+            ),
+            const SizedBox(height: 8),
+            Expanded(
+              child: NavigationDrawer(
+                selectedIndex: selectedIndex < 0 ? null : selectedIndex,
+                onDestinationSelected: (index) {
+                  final String route = destinations[index].route;
+                  if (route == selectedRoute) {
+                    if (!embedded) {
+                      Navigator.pop(context);
+                    }
+                    return;
+                  }
+
+                  if (!embedded) {
+                    Navigator.pop(context);
+                  }
+
+                  Navigator.of(context).pushReplacementNamed(route);
+                },
+                children: [
+                  for (final destination in destinations)
+                    NavigationDrawerDestination(
+                      icon: Icon(destination.icon),
+                      label: Text(destination.label),
+                    ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
+              onPressed: () async {
                 final bool confirmed = await showVitacareConfirmationDialog(
                   context,
                   title: 'Encerrar sessao',
                   message:
-                      'Deseja sair do VitaCare agora? Seus dados simulados continuarao disponiveis nesta demonstracao.',
+                      'Deseja sair do VitaCare agora? Os dados da demonstracao continuarao disponiveis.',
                   confirmLabel: 'Sair',
                 );
                 if (!confirmed || !context.mounted) {
                   return;
                 }
                 context.read<AuthProvider>().logout();
-                Navigator.of(context).pushNamedAndRemoveUntil('/', (_) => false);
+                Navigator.of(context).pushNamedAndRemoveUntil(
+                  VitacareRoutes.login,
+                  (_) => false,
+                );
               },
+              icon: const Icon(Icons.logout_rounded),
+              label: const Text('Sair'),
             ),
           ],
         ),
@@ -96,43 +159,14 @@ class VitacareAppDrawer extends StatelessWidget {
   }
 }
 
-class _DrawerRouteTile extends StatelessWidget {
-  const _DrawerRouteTile({
-    required this.icon,
+class _NavigationDestinationData {
+  const _NavigationDestinationData({
     required this.label,
     required this.route,
-    required this.selectedRoute,
+    required this.icon,
   });
 
-  final IconData icon;
   final String label;
   final String route;
-  final String selectedRoute;
-
-  @override
-  Widget build(BuildContext context) {
-    final bool isSelected = route == selectedRoute;
-    return ListTile(
-      leading: Icon(
-        icon,
-        color: isSelected ? VitacareColors.primaryStrong : VitacareColors.textSoft,
-      ),
-      title: Text(
-        label,
-        style: TextStyle(
-          color: isSelected ? VitacareColors.primaryStrong : VitacareColors.textStrong,
-          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-        ),
-      ),
-      selected: isSelected,
-      selectedTileColor: VitacareColors.accent.withValues(alpha: 0.14),
-      onTap: () {
-        if (route != selectedRoute) {
-          Navigator.of(context).pushReplacementNamed(route);
-          return;
-        }
-        Navigator.pop(context);
-      },
-    );
-  }
+  final IconData icon;
 }

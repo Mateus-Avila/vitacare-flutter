@@ -10,8 +10,6 @@ InputDecoration vitacareInputDecoration({
     labelText: label,
     hintText: hint,
     prefixIcon: Icon(icon, color: VitacareColors.textMuted),
-    filled: true,
-    fillColor: VitacareColors.inputFill,
     contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
   );
 }

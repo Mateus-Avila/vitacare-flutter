@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:vitacare_flutter/core/vitacare_feedback.dart';
+import 'package:vitacare_flutter/core/vitacare_routes.dart';
 import 'package:vitacare_flutter/providers/auth_provider.dart';
 import 'package:vitacare_flutter/providers/patient_provider.dart';
 import 'package:vitacare_flutter/theme/vitacare_colors.dart';
@@ -46,7 +47,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       );
 
       if (openAlerts && mounted) {
-        Navigator.pushReplacementNamed(context, '/alerts');
+        Navigator.pushReplacementNamed(context, VitacareRoutes.alerts);
       }
     });
   }
@@ -58,7 +59,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     return VitacarePageScaffold(
       title: 'Painel do VitaCare',
-      selectedRoute: '/dashboard',
+      subtitle:
+          'Acompanhe os modulos principais do sistema e o panorama atual dos pacientes em cuidado continuo.',
+      selectedRoute: VitacareRoutes.dashboard,
       child: LayoutBuilder(
         builder: (context, constraints) {
           final bool isWide = constraints.maxWidth >= 980;
@@ -81,7 +84,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'O VitaCare organiza o acompanhamento de pacientes cronicos e idosos com dados mockados, alertas e historico acessivel para a equipe.',
+                          'O VitaCare apoia o registro dos cuidados, a visualizacao do historico e a coordenacao entre profissionais e cuidadores.',
                           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                                 color: VitacareColors.textSoft,
                                 height: 1.5,
@@ -144,7 +147,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Funcionalidades especificas do projeto',
+              'Funcionalidades principais',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     color: VitacareColors.textStrong,
                     fontWeight: FontWeight.w700,
@@ -152,7 +155,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
             const SizedBox(height: 6),
             Text(
-              'Os cinco modulos abaixo atendem ao RF005 e representam o fluxo principal de acompanhamento no VitaCare.',
+              'Os modulos abaixo representam o fluxo principal de cadastro, acompanhamento e monitoramento clinico do VitaCare.',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: VitacareColors.textSoft,
                     height: 1.45,
@@ -163,35 +166,50 @@ class _DashboardScreenState extends State<DashboardScreen> {
               title: '1. Cadastro de paciente',
               subtitle: 'Registra dados basicos do paciente e do cuidador responsavel.',
               icon: Icons.person_add_alt_1_rounded,
-              onTap: () => Navigator.pushReplacementNamed(context, '/patients/register'),
+              onTap: () => Navigator.pushReplacementNamed(
+                context,
+                VitacareRoutes.patientRegistration,
+              ),
             ),
             const SizedBox(height: 10),
             _ActionButton(
               title: '2. Listagem de pacientes',
               subtitle: 'Exibe a lista principal com status e acesso rapido ao acompanhamento.',
               icon: Icons.list_alt_rounded,
-              onTap: () => Navigator.pushReplacementNamed(context, '/patients/list'),
+              onTap: () => Navigator.pushReplacementNamed(
+                context,
+                VitacareRoutes.patientList,
+              ),
             ),
             const SizedBox(height: 10),
             _ActionButton(
               title: '3. Registro de dados de saude',
               subtitle: 'Salva pressao arterial, glicemia e observacoes clinicas.',
               icon: Icons.monitor_heart_rounded,
-              onTap: () => Navigator.pushReplacementNamed(context, '/records/register'),
+              onTap: () => Navigator.pushReplacementNamed(
+                context,
+                VitacareRoutes.healthRecord,
+              ),
             ),
             const SizedBox(height: 10),
             _ActionButton(
               title: '4. Historico de registros',
               subtitle: 'Mostra a evolucao dos registros de forma ordenada e filtravel.',
               icon: Icons.timeline_rounded,
-              onTap: () => Navigator.pushReplacementNamed(context, '/records/history'),
+              onTap: () => Navigator.pushReplacementNamed(
+                context,
+                VitacareRoutes.recordsHistory,
+              ),
             ),
             const SizedBox(height: 10),
             _ActionButton(
               title: '5. Alertas e status',
               subtitle: 'Destaca pacientes em prioridade alta para apoio da equipe.',
               icon: Icons.warning_amber_rounded,
-              onTap: () => Navigator.pushReplacementNamed(context, '/alerts'),
+              onTap: () => Navigator.pushReplacementNamed(
+                context,
+                VitacareRoutes.alerts,
+              ),
             ),
           ],
         ),
@@ -216,7 +234,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             const SizedBox(height: 14),
             const VitacareFeatureTile(
               icon: Icons.elderly_outlined,
-              title: 'Publico de cuidado continuo',
+              title: 'Cuidado continuo',
               description:
                   'Foco em idosos e pacientes com doencas cronicas que precisam de monitoramento frequente entre consultas.',
             ),
@@ -230,16 +248,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
             const SizedBox(height: 10),
             const VitacareFeatureTile(
               icon: Icons.data_usage_rounded,
-              title: 'Dados mockados para demonstracao',
+              title: 'Demonstracao academica',
               description:
-                  'Nesta etapa academica, autenticacao, pacientes e registros sao simulados para demonstrar interface, navegacao e listagem.',
+                  'Nesta entrega, autenticacao, pacientes e registros sao apresentados em ambiente demonstrativo para validar interface e navegacao.',
             ),
             const SizedBox(height: 10),
             _ActionButton(
               title: 'Tela Sobre',
               subtitle: 'Consulte o resumo academico, objetivos e escopo atual do VitaCare.',
               icon: Icons.info_outline_rounded,
-              onTap: () => Navigator.pushReplacementNamed(context, '/about'),
+              onTap: () => Navigator.pushReplacementNamed(
+                context,
+                VitacareRoutes.about,
+              ),
             ),
           ],
         ),
