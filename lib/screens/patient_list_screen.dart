@@ -31,9 +31,9 @@ class PatientListScreen extends StatelessWidget {
               Text(
                 'Pacientes cadastrados: ${patients.length}',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: VitacareColors.textStrong,
-                      fontWeight: FontWeight.w700,
-                    ),
+                  color: VitacareColors.textStrong,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               const SizedBox(height: 12),
               Expanded(
@@ -45,12 +45,9 @@ class PatientListScreen extends StatelessWidget {
                             const SizedBox(height: 10),
                         itemBuilder: (context, index) {
                           final Patient patient = patients[index];
-                          final PatientStatus status =
-                              provider.statusForPatient(patient.id);
-                          return _PatientTile(
-                            patient: patient,
-                            status: status,
-                          );
+                          final PatientStatus status = provider
+                              .statusForPatient(patient.id);
+                          return _PatientTile(patient: patient, status: status);
                         },
                       ),
               ),
@@ -63,10 +60,7 @@ class PatientListScreen extends StatelessWidget {
 }
 
 class _PatientTile extends StatelessWidget {
-  const _PatientTile({
-    required this.patient,
-    required this.status,
-  });
+  const _PatientTile({required this.patient, required this.status});
 
   final Patient patient;
   final PatientStatus status;
@@ -92,7 +86,7 @@ class _PatientTile extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 24,
-              backgroundColor: VitacareColors.accent.withValues(alpha: 0.16),
+                backgroundColor: VitacareColors.accent.withValues(alpha: 0.16),
                 child: Text(
                   patient.name.isNotEmpty ? patient.name[0].toUpperCase() : '?',
                   style: const TextStyle(
@@ -127,12 +121,20 @@ class _PatientTile extends StatelessWidget {
                       'Cuidador: ${patient.caregiver}',
                       style: const TextStyle(color: VitacareColors.textSoft),
                     ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Toque para ver historico, auditoria do cuidado e resumo do acompanhamento.',
+                      style: const TextStyle(color: VitacareColors.textMuted),
+                    ),
                   ],
                 ),
               ),
               const SizedBox(width: 10),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: statusColor.withValues(alpha: 0.14),
                   borderRadius: BorderRadius.circular(999),
@@ -222,9 +224,9 @@ class _EmptyPatientsState extends StatelessWidget {
     return Center(
       child: Text(
         'Nenhum paciente cadastrado ainda na base demonstrativa.',
-        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: VitacareColors.textSoft,
-            ),
+        style: Theme.of(
+          context,
+        ).textTheme.titleMedium?.copyWith(color: VitacareColors.textSoft),
       ),
     );
   }

@@ -4,6 +4,7 @@ import 'package:vitacare_flutter/core/vitacare_feedback.dart';
 import 'package:vitacare_flutter/core/vitacare_routes.dart';
 import 'package:vitacare_flutter/models/health_record.dart';
 import 'package:vitacare_flutter/models/patient.dart';
+import 'package:vitacare_flutter/providers/auth_provider.dart';
 import 'package:vitacare_flutter/providers/patient_provider.dart';
 import 'package:vitacare_flutter/theme/vitacare_colors.dart';
 import 'package:vitacare_flutter/theme/vitacare_input_decoration.dart';
@@ -23,15 +24,43 @@ class _HealthRecordScreenState extends State<HealthRecordScreen> {
   final TextEditingController _systolicController = TextEditingController();
   final TextEditingController _diastolicController = TextEditingController();
   final TextEditingController _glucoseController = TextEditingController();
+  final TextEditingController _weightController = TextEditingController();
+  final TextEditingController _symptomsController = TextEditingController();
+  final TextEditingController _recordedByController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
 
   String? _selectedPatientId;
+  String _mealStatus = 'Alimentacao adequada';
+  String _mobilityStatus = 'Locomocao preservada';
+  String _moodStatus = 'Bem-humorado';
+  String _sleepStatus = 'Sono regular';
+  String _medicationAdherence = 'Completa';
+  String _activityAdherence = 'Realizada';
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_recordedByController.text.isNotEmpty) {
+      return;
+    }
+
+    final String? currentUserName = context
+        .read<AuthProvider>()
+        .currentUser
+        ?.name;
+    if (currentUserName != null && currentUserName.isNotEmpty) {
+      _recordedByController.text = currentUserName;
+    }
+  }
 
   @override
   void dispose() {
     _systolicController.dispose();
     _diastolicController.dispose();
     _glucoseController.dispose();
+    _weightController.dispose();
+    _symptomsController.dispose();
+    _recordedByController.dispose();
     _notesController.dispose();
     super.dispose();
   }
@@ -60,28 +89,54 @@ class _HealthRecordScreenState extends State<HealthRecordScreen> {
     final int? systolic = int.tryParse(_systolicController.text.trim());
     final int? diastolic = int.tryParse(_diastolicController.text.trim());
     final int? glucose = int.tryParse(_glucoseController.text.trim());
+    final double? weight = double.tryParse(
+      _weightController.text.trim().replaceAll(',', '.'),
+    );
 
-    if (systolic == null || diastolic == null || glucose == null) {
+    if (systolic == null ||
+        diastolic == null ||
+        glucose == null ||
+        weight == null) {
       showVitacareSnackBar(
         context,
-        'Todos os valores devem ser numericos.',
+        'Pressao, glicemia e peso devem ser numericos.',
         isError: true,
       );
       return;
     }
 
     final HealthRecord record = context.read<PatientProvider>().addHealthRecord(
-          patientId: _selectedPatientId!,
-          systolic: systolic,
-          diastolic: diastolic,
-          glucose: glucose,
-          notes: _notesController.text,
-        );
+      patientId: _selectedPatientId!,
+      systolic: systolic,
+      diastolic: diastolic,
+      glucose: glucose,
+      weight: weight,
+      symptoms: _symptomsController.text,
+      mealStatus: _mealStatus,
+      mobilityStatus: _mobilityStatus,
+      moodStatus: _moodStatus,
+      sleepStatus: _sleepStatus,
+      medicationAdherence: _medicationAdherence,
+      activityAdherence: _activityAdherence,
+      recordedBy: _recordedByController.text,
+      notes: _notesController.text,
+    );
 
     _systolicController.clear();
     _diastolicController.clear();
     _glucoseController.clear();
+    _weightController.clear();
+    _symptomsController.clear();
+    _recordedByController.clear();
     _notesController.clear();
+    setState(() {
+      _mealStatus = 'Alimentacao adequada';
+      _mobilityStatus = 'Locomocao preservada';
+      _moodStatus = 'Bem-humorado';
+      _sleepStatus = 'Sono regular';
+      _medicationAdherence = 'Completa';
+      _activityAdherence = 'Realizada';
+    });
 
     if (record.isCritical) {
       final bool openAlerts = await showVitacareConfirmationDialog(
@@ -139,7 +194,9 @@ class _HealthRecordScreenState extends State<HealthRecordScreen> {
                                 .map(
                                   (patient) => DropdownMenuItem<String>(
                                     value: patient.id,
-                                    child: Text('${patient.name} (${patient.id})'),
+                                    child: Text(
+                                      '${patient.name} (${patient.id})',
+                                    ),
                                   ),
                                 )
                                 .toList(),
@@ -197,6 +254,141 @@ class _HealthRecordScreenState extends State<HealthRecordScreen> {
                           ),
                           const SizedBox(height: 12),
                           TextFormField(
+                            controller: _weightController,
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            decoration: vitacareInputDecoration(
+                              label: 'Peso (kg)',
+                              hint: 'Ex: 68,4',
+                              icon: Icons.monitor_weight_outlined,
+                            ),
+                            validator: (value) {
+                              if ((value ?? '').trim().isEmpty) {
+                                return 'Informe o peso atual.';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: _symptomsController,
+                            minLines: 2,
+                            maxLines: 3,
+                            decoration: vitacareInputDecoration(
+                              label: 'Sintomas observados',
+                              hint:
+                                  'Ex: cansaco, tontura, sem queixas relevantes',
+                              icon: Icons.sick_outlined,
+                            ),
+                            validator: (value) {
+                              if ((value ?? '').trim().isEmpty) {
+                                return 'Descreva os sintomas ou indique ausencia.';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 12),
+                          _StatusDropdown(
+                            label: 'Alimentacao',
+                            icon: Icons.restaurant_outlined,
+                            value: _mealStatus,
+                            options: const [
+                              'Alimentacao adequada',
+                              'Alimentacao parcial',
+                              'Baixa ingestao alimentar',
+                            ],
+                            onChanged: (value) {
+                              setState(() => _mealStatus = value!);
+                            },
+                          ),
+                          const SizedBox(height: 12),
+                          _StatusDropdown(
+                            label: 'Locomocao',
+                            icon: Icons.accessible_forward_rounded,
+                            value: _mobilityStatus,
+                            options: const [
+                              'Locomocao preservada',
+                              'Caminhou com apoio leve',
+                              'Necessita apoio frequente',
+                            ],
+                            onChanged: (value) {
+                              setState(() => _mobilityStatus = value!);
+                            },
+                          ),
+                          const SizedBox(height: 12),
+                          _StatusDropdown(
+                            label: 'Humor',
+                            icon: Icons.mood_outlined,
+                            value: _moodStatus,
+                            options: const [
+                              'Bem-humorado',
+                              'Atencao moderada',
+                              'Apatica',
+                            ],
+                            onChanged: (value) {
+                              setState(() => _moodStatus = value!);
+                            },
+                          ),
+                          const SizedBox(height: 12),
+                          _StatusDropdown(
+                            label: 'Sono',
+                            icon: Icons.bedtime_outlined,
+                            value: _sleepStatus,
+                            options: const [
+                              'Sono regular',
+                              'Sono irregular',
+                              'Sono ruim',
+                            ],
+                            onChanged: (value) {
+                              setState(() => _sleepStatus = value!);
+                            },
+                          ),
+                          const SizedBox(height: 12),
+                          _StatusDropdown(
+                            label: 'Adesao medicamentosa',
+                            icon: Icons.medication_outlined,
+                            value: _medicationAdherence,
+                            options: const [
+                              'Completa',
+                              'Parcial',
+                              'Nao realizada',
+                            ],
+                            onChanged: (value) {
+                              setState(() => _medicationAdherence = value!);
+                            },
+                          ),
+                          const SizedBox(height: 12),
+                          _StatusDropdown(
+                            label: 'Atividades planejadas',
+                            icon: Icons.checklist_rounded,
+                            value: _activityAdherence,
+                            options: const [
+                              'Realizada',
+                              'Parcial',
+                              'Nao realizada',
+                            ],
+                            onChanged: (value) {
+                              setState(() => _activityAdherence = value!);
+                            },
+                          ),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: _recordedByController,
+                            decoration: vitacareInputDecoration(
+                              label: 'Registrado por',
+                              hint: 'Ex: Cuidadora Ana ou Enfermeiro Lucas',
+                              icon: Icons.badge_outlined,
+                            ),
+                            validator: (value) {
+                              if ((value ?? '').trim().isEmpty) {
+                                return 'Informe quem realizou o registro.';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 12),
+                          TextFormField(
                             controller: _notesController,
                             minLines: 3,
                             maxLines: 5,
@@ -247,9 +439,9 @@ class _HealthRecordScreenState extends State<HealthRecordScreen> {
                 Text(
                   'Cadastre ao menos um paciente para registrar parametros de saude, observacoes e sinais de risco.',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: VitacareColors.textStrong,
-                        fontWeight: FontWeight.w700,
-                      ),
+                    color: VitacareColors.textStrong,
+                    fontWeight: FontWeight.w700,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 12),
@@ -265,6 +457,41 @@ class _HealthRecordScreenState extends State<HealthRecordScreen> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _StatusDropdown extends StatelessWidget {
+  const _StatusDropdown({
+    required this.label,
+    required this.icon,
+    required this.value,
+    required this.options,
+    required this.onChanged,
+  });
+
+  final String label;
+  final IconData icon;
+  final String value;
+  final List<String> options;
+  final ValueChanged<String?> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return DropdownButtonFormField<String>(
+      initialValue: value,
+      decoration: vitacareInputDecoration(
+        label: label,
+        hint: label,
+        icon: icon,
+      ),
+      items: options
+          .map(
+            (option) =>
+                DropdownMenuItem<String>(value: option, child: Text(option)),
+          )
+          .toList(),
+      onChanged: onChanged,
     );
   }
 }

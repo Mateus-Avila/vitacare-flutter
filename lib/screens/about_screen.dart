@@ -26,7 +26,8 @@ class AboutScreen extends StatelessWidget {
                   children: [
                     Text(
                       'VitaCare',
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(
                             color: VitacareColors.textStrong,
                             fontWeight: FontWeight.w700,
                           ),
@@ -35,9 +36,9 @@ class AboutScreen extends StatelessWidget {
                     Text(
                       'Portal responsivo com foco em acompanhamento continuo, documentacao dos cuidados e coordenacao entre equipe de saude, cuidadores e familiares.',
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: VitacareColors.textSoft,
-                            height: 1.5,
-                          ),
+                        color: VitacareColors.textSoft,
+                        height: 1.5,
+                      ),
                     ),
                     const SizedBox(height: 22),
                     _AboutSection(
@@ -55,7 +56,13 @@ class AboutScreen extends StatelessWidget {
                     _AboutSection(
                       title: 'Funcionalidades demonstradas nesta etapa',
                       content:
-                          'O aplicativo apresenta login, cadastro, recuperacao de senha e tela sobre, alem de cinco modulos especificos: cadastro de paciente, listagem de pacientes, registro de dados de saude, historico de registros e alertas/status. Esses modulos demonstram o fluxo principal do VitaCare para documentacao e acompanhamento do cuidado.',
+                          'O aplicativo apresenta login, cadastro, recuperacao de senha e tela sobre, alem de cinco modulos especificos: cadastro de paciente, listagem de pacientes, registro de dados de saude, historico de registros com indicadores e alertas/status. Esses modulos demonstram o fluxo principal do VitaCare para documentacao, acompanhamento continuo e coordenacao do cuidado.',
+                    ),
+                    const SizedBox(height: 18),
+                    _AboutSection(
+                      title: 'Indicadores clinicos e operacionais',
+                      content:
+                          'A interface de historico consolida media do periodo, variacao absoluta e percentual, percentual dentro da faixa ideal, taxa de adesao aos registros e tendencia linear simplificada. Com esses indicadores, o projeto classifica o acompanhamento em melhora, estabilidade ou piora.',
                     ),
                     const SizedBox(height: 18),
                     _AboutSection(
@@ -66,8 +73,7 @@ class AboutScreen extends StatelessWidget {
                     const SizedBox(height: 18),
                     _AboutSection(
                       title: 'Equipe',
-                      content:
-                          'Mateus Mendonca de Avila\nJoaquim Neto',
+                      content: 'Mateus Mendonca de Avila\nJoaquim Neto',
                     ),
                     const SizedBox(height: 18),
                     Container(
@@ -99,10 +105,7 @@ class AboutScreen extends StatelessWidget {
 }
 
 class _AboutSection extends StatelessWidget {
-  const _AboutSection({
-    required this.title,
-    required this.content,
-  });
+  const _AboutSection({required this.title, required this.content});
 
   final String title;
   final String content;
@@ -115,17 +118,14 @@ class _AboutSection extends StatelessWidget {
         Text(
           title,
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: VitacareColors.primaryStrong,
-                fontWeight: FontWeight.w700,
-              ),
+            color: VitacareColors.primaryStrong,
+            fontWeight: FontWeight.w700,
+          ),
         ),
         const SizedBox(height: 6),
         Text(
           content,
-          style: const TextStyle(
-            color: VitacareColors.textSoft,
-            height: 1.6,
-          ),
+          style: const TextStyle(color: VitacareColors.textSoft, height: 1.6),
         ),
       ],
     );
