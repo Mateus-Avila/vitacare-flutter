@@ -38,8 +38,8 @@ class AboutScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     const Text(
-                      'Simular o acompanhamento de pacientes cronicos e idosos, '
-                      'com registro de dados de saude, historico de evolucao e alertas '
+                      'Simular o acompanhamento de pacientes crônicos e idosos, '
+                      'com registro de dados de saúde, histórico de evolução e alertas '
                       'de prioridade para apoiar profissionais e cuidadores.',
                       style: TextStyle(
                         color: VitacareColors.textSoft,
@@ -56,7 +56,7 @@ class AboutScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     const Text(
-                      'Mateus Mendonca de Avila\n'
+                      'Mateus Mendonça de Ávila\n'
                       'Joaquim Neto',
                       style: TextStyle(
                         color: VitacareColors.textSoft,
@@ -65,7 +65,7 @@ class AboutScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 18),
                     Text(
-                      'Informacoes academicas',
+                      'Informações acadêmicas',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                             color: VitacareColors.primaryStrong,
                             fontWeight: FontWeight.w700,
@@ -73,10 +73,10 @@ class AboutScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     const Text(
-                      'Disciplina: Programacao Mobile II\n'
-                      'Instituicao: UNAERP - Universidade de Ribeirao Preto\n'
+                      'Disciplina: Programação Mobile II\n'
+                      'Instituição: UNAERP - Universidade de Ribeirão Preto\n'
                       'Professor: Rodrigo Plotze\n'
-                      'Versao do aplicativo: 0.1',
+                      'Versão do aplicativo: 0.1',
                       style: TextStyle(
                         color: VitacareColors.textSoft,
                         height: 1.6,
@@ -92,7 +92,7 @@ class AboutScreen extends StatelessWidget {
                         border: Border.all(color: VitacareColors.border),
                       ),
                       child: const Text(
-                        'Projeto academico sem backend real. Dados e autenticacao sao simulados para demonstracao das interfaces, navegacao e uso de ChangeNotifier.',
+                        'Projeto acadêmico sem backend real. Dados e autenticação são simulados para demonstração das interfaces, navegação e uso de ChangeNotifier.',
                         style: TextStyle(
                           color: VitacareColors.textStrong,
                           fontWeight: FontWeight.w600,
