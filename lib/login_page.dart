@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:vitacare_flutter/core/vitacare_feedback.dart';
+import 'package:vitacare_flutter/core/vitacare_validators.dart';
+import 'package:vitacare_flutter/providers/auth_provider.dart';
 import 'package:vitacare_flutter/theme/vitacare_colors.dart';
 import 'package:vitacare_flutter/theme/vitacare_input_decoration.dart';
 import 'package:vitacare_flutter/widgets/vitacare_background.dart';
@@ -24,8 +28,6 @@ class _LoginPageState extends State<LoginPage>
   late final Animation<Offset> _slideAnimation;
 
   bool _obscurePassword = true;
-
-  static final _emailRegex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
 
   @override
   void initState() {
@@ -60,25 +62,27 @@ class _LoginPageState extends State<LoginPage>
   void _handleLogin() {
     FocusScope.of(context).unfocus();
 
-    if (_formKey.currentState?.validate() ?? false) {
-      Navigator.of(context).push(
-        MaterialPageRoute<void>(
-          builder: (_) => const LoginSuccessPage(),
-        ),
+    if (!(_formKey.currentState?.validate() ?? false)) {
+      showVitacareSnackBar(
+        context,
+        'Revise os campos obrigatorios.',
+        isError: true,
       );
+      return;
     }
-  }
 
-  void _showInfoSnackBar(String message) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(message),
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: VitacareColors.primary,
-        ),
-      );
+    final result = context.read<AuthProvider>().login(
+          email: _emailController.text,
+          password: _passwordController.text,
+        );
+
+    if (!result.isSuccess) {
+      showVitacareSnackBar(context, result.message, isError: true);
+      return;
+    }
+
+    showVitacareSnackBar(context, result.message);
+    Navigator.pushReplacementNamed(context, '/dashboard');
   }
 
   @override
@@ -212,7 +216,7 @@ class _LoginPageState extends State<LoginPage>
                 if (email.isEmpty) {
                   return 'Informe seu e-mail.';
                 }
-                if (!_emailRegex.hasMatch(email)) {
+                if (!VitacareValidators.isValidEmail(email)) {
                   return 'Digite um e-mail valido.';
                 }
                 return null;
@@ -260,7 +264,7 @@ class _LoginPageState extends State<LoginPage>
               alignment: Alignment.centerRight,
               child: TextButton(
                 onPressed: () {
-                  _showInfoSnackBar('Recuperacao de senha em breve.');
+                  Navigator.pushNamed(context, '/forgot-password');
                 },
                 child: const Text('Esqueceu a senha?'),
               ),
@@ -282,7 +286,7 @@ class _LoginPageState extends State<LoginPage>
                 ),
                 TextButton(
                   onPressed: () {
-                    _showInfoSnackBar('Cadastro em breve.');
+                    Navigator.pushNamed(context, '/register');
                   },
                   child: const Text('Cadastrar'),
                 ),
@@ -332,59 +336,5 @@ class _LoginPageState extends State<LoginPage>
     required IconData icon,
   }) {
     return vitacareInputDecoration(label: label, hint: hint, icon: icon);
-  }
-}
-
-class LoginSuccessPage extends StatelessWidget {
-  const LoginSuccessPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Vitacare'),
-      ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                height: 76,
-                width: 76,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: VitacareColors.accent.withValues(alpha: 0.12),
-                ),
-                child: const Icon(
-                  Icons.check_circle_rounded,
-                  size: 46,
-                  color: VitacareColors.accent,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Bem-vindo ao Vitacare!',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: VitacareColors.textStrong,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 10),
-              Text(
-                'Login validado com sucesso.\nEsta e uma tela placeholder para a apresentacao.',
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: VitacareColors.textSoft,
-                  height: 1.5,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 }
