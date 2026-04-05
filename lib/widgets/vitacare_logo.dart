@@ -15,7 +15,7 @@ class VitacareLogo extends StatelessWidget {
         assetPath,
         height: height,
         fit: BoxFit.contain,
-        errorBuilder: (_, __, ___) => const _FallbackLogo(),
+        errorBuilder: (context, error, stackTrace) => const _FallbackLogo(),
       ),
     );
   }
