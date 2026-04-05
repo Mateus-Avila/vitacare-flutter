@@ -3,13 +3,13 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import 'package:vitacare_flutter/login_page.dart';
 import 'package:vitacare_flutter/providers/auth_provider.dart';
 import 'package:vitacare_flutter/providers/patient_provider.dart';
 import 'package:vitacare_flutter/screens/about_screen.dart';
 import 'package:vitacare_flutter/screens/dashboard_screen.dart';
 import 'package:vitacare_flutter/screens/forgot_password_page.dart';
 import 'package:vitacare_flutter/screens/health_record_screen.dart';
+import 'package:vitacare_flutter/screens/login_page.dart';
 import 'package:vitacare_flutter/screens/patient_alerts_screen.dart';
 import 'package:vitacare_flutter/screens/patient_list_screen.dart';
 import 'package:vitacare_flutter/screens/patient_registration_screen.dart';
@@ -45,7 +45,7 @@ class VitacareApp extends StatelessWidget {
     '/about',
   };
 
-  Widget _buildPage(String routeName) {
+  Widget _buildPage(String routeName, {Object? arguments}) {
     switch (routeName) {
       case '/':
         return const LoginPage();
@@ -62,7 +62,9 @@ class VitacareApp extends StatelessWidget {
       case '/records/register':
         return const HealthRecordScreen();
       case '/records/history':
-        return const RecordsHistoryScreen();
+        return RecordsHistoryScreen(
+          initialPatientId: arguments is String ? arguments : null,
+        );
       case '/alerts':
         return const PatientAlertsScreen();
       case '/about':
@@ -94,7 +96,7 @@ class VitacareApp extends StatelessWidget {
 
     return MaterialPageRoute<void>(
       settings: RouteSettings(name: resolvedRoute, arguments: settings.arguments),
-      builder: (_) => _buildPage(resolvedRoute),
+      builder: (_) => _buildPage(resolvedRoute, arguments: settings.arguments),
     );
   }
 

@@ -106,7 +106,7 @@ class _RegisterPageState extends State<RegisterPage> {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'Crie sua conta para acompanhar pacientes no VitaCare.',
+                              'Crie sua conta para acessar os modulos academicos de cadastro, registros, historico e alertas do VitaCare.',
                               style: theme.textTheme.bodyMedium?.copyWith(
                                 color: VitacareColors.textSoft,
                               ),
@@ -156,7 +156,7 @@ class _RegisterPageState extends State<RegisterPage> {
                               textInputAction: TextInputAction.next,
                               decoration: vitacareInputDecoration(
                                 label: 'Telefone',
-                                hint: '(11) 99999-9999',
+                                hint: '(16) 99999-9999',
                                 icon: Icons.phone_outlined,
                               ),
                               validator: (value) {

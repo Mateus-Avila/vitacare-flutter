@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:vitacare_flutter/core/vitacare_feedback.dart';
 import 'package:vitacare_flutter/providers/auth_provider.dart';
 import 'package:vitacare_flutter/providers/patient_provider.dart';
 import 'package:vitacare_flutter/theme/vitacare_colors.dart';
@@ -25,36 +26,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
 
     final int alerts = context.read<PatientProvider>().criticalAlertsCount;
-    if (alerts > 0) {
-      _alertShown = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) {
-          return;
-        }
-        showDialog<void>(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Alerta clinico'),
-            content: Text(
-              'Existem $alerts pacientes em estado critico. Abra "Alertas e Status" para detalhar.',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Fechar'),
-              ),
-              FilledButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  Navigator.pushReplacementNamed(context, '/alerts');
-                },
-                child: const Text('Ver alertas'),
-              ),
-            ],
-          ),
-        );
-      });
+    if (alerts <= 0) {
+      return;
     }
+
+    _alertShown = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) {
+        return;
+      }
+
+      final bool openAlerts = await showVitacareConfirmationDialog(
+        context,
+        title: 'Alerta clinico',
+        message:
+            'Existem $alerts pacientes com prioridade alta na base demonstrativa. Deseja abrir a tela de Alertas e Status agora?',
+        confirmLabel: 'Ver alertas',
+        cancelLabel: 'Agora nao',
+      );
+
+      if (openAlerts && mounted) {
+        Navigator.pushReplacementNamed(context, '/alerts');
+      }
+    });
   }
 
   @override
@@ -63,11 +57,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final PatientProvider patientProvider = context.watch<PatientProvider>();
 
     return VitacarePageScaffold(
-      title: 'Dashboard VitaCare',
+      title: 'Painel do VitaCare',
       selectedRoute: '/dashboard',
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final bool wide = constraints.maxWidth > 860;
+          final bool isWide = constraints.maxWidth >= 980;
           return SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -87,9 +81,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Visao rapida de acompanhamento para pacientes cronicos e idosos.',
+                          'O VitaCare organiza o acompanhamento de pacientes cronicos e idosos com dados mockados, alertas e historico acessivel para a equipe.',
                           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                                 color: VitacareColors.textSoft,
+                                height: 1.5,
                               ),
                         ),
                         const SizedBox(height: 18),
@@ -98,15 +93,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           runSpacing: 12,
                           children: [
                             _StatusChip(
-                              label: '${patientProvider.patients.length} pacientes cadastrados',
+                              label:
+                                  '${patientProvider.patients.length} pacientes acompanhados',
                               color: VitacareColors.primary,
                             ),
                             _StatusChip(
-                              label: '${patientProvider.allRecordsSorted.length} registros de saude',
+                              label:
+                                  '${patientProvider.allRecordsSorted.length} registros de saude',
                               color: VitacareColors.accent,
                             ),
                             _StatusChip(
-                              label: '${patientProvider.criticalAlertsCount} alertas criticos',
+                              label:
+                                  '${patientProvider.criticalAlertsCount} alertas prioritarios',
                               color: Colors.red.shade700,
                             ),
                           ],
@@ -116,19 +114,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                if (wide)
+                if (isWide)
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(child: _buildMainActions(context)),
-                      const SizedBox(width: 14),
-                      Expanded(child: _buildSupportActions(context)),
+                      Expanded(child: _buildModules(context)),
+                      const SizedBox(width: 16),
+                      Expanded(child: _buildAcademicSupport(context)),
                     ],
                   )
                 else ...[
-                  _buildMainActions(context),
-                  const SizedBox(height: 14),
-                  _buildSupportActions(context),
+                  _buildModules(context),
+                  const SizedBox(height: 16),
+                  _buildAcademicSupport(context),
                 ],
               ],
             ),
@@ -138,43 +136,62 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildMainActions(BuildContext context) {
+  Widget _buildModules(BuildContext context) {
     return VitacareGlassCard(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(18),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                'Fluxo principal',
-                style: TextStyle(
-                  color: VitacareColors.textStrong,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
+            Text(
+              'Funcionalidades especificas do projeto',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    color: VitacareColors.textStrong,
+                    fontWeight: FontWeight.w700,
+                  ),
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 6),
+            Text(
+              'Os cinco modulos abaixo atendem ao RF005 e representam o fluxo principal de acompanhamento no VitaCare.',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: VitacareColors.textSoft,
+                    height: 1.45,
+                  ),
+            ),
+            const SizedBox(height: 16),
             _ActionButton(
-              title: 'Cadastro de Paciente',
-              subtitle: 'Adicione um novo paciente com dados basicos.',
+              title: '1. Cadastro de paciente',
+              subtitle: 'Registra dados basicos do paciente e do cuidador responsavel.',
               icon: Icons.person_add_alt_1_rounded,
               onTap: () => Navigator.pushReplacementNamed(context, '/patients/register'),
             ),
             const SizedBox(height: 10),
             _ActionButton(
-              title: 'Registro de Dados de Saude',
-              subtitle: 'Registre pressao arterial, glicemia e observacoes.',
+              title: '2. Listagem de pacientes',
+              subtitle: 'Exibe a lista principal com status e acesso rapido ao acompanhamento.',
+              icon: Icons.list_alt_rounded,
+              onTap: () => Navigator.pushReplacementNamed(context, '/patients/list'),
+            ),
+            const SizedBox(height: 10),
+            _ActionButton(
+              title: '3. Registro de dados de saude',
+              subtitle: 'Salva pressao arterial, glicemia e observacoes clinicas.',
               icon: Icons.monitor_heart_rounded,
               onTap: () => Navigator.pushReplacementNamed(context, '/records/register'),
             ),
             const SizedBox(height: 10),
             _ActionButton(
-              title: 'Historico de Registros',
-              subtitle: 'Consulte a evolucao clinica rapidamente.',
+              title: '4. Historico de registros',
+              subtitle: 'Mostra a evolucao dos registros de forma ordenada e filtravel.',
               icon: Icons.timeline_rounded,
               onTap: () => Navigator.pushReplacementNamed(context, '/records/history'),
+            ),
+            const SizedBox(height: 10),
+            _ActionButton(
+              title: '5. Alertas e status',
+              subtitle: 'Destaca pacientes em prioridade alta para apoio da equipe.',
+              icon: Icons.warning_amber_rounded,
+              onTap: () => Navigator.pushReplacementNamed(context, '/alerts'),
             ),
           ],
         ),
@@ -182,46 +199,45 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildSupportActions(BuildContext context) {
+  Widget _buildAcademicSupport(BuildContext context) {
     return VitacareGlassCard(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(18),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                'Operacao e suporte',
-                style: TextStyle(
-                  color: VitacareColors.textStrong,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
+            Text(
+              'Contexto do projeto',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    color: VitacareColors.textStrong,
+                    fontWeight: FontWeight.w700,
+                  ),
             ),
             const SizedBox(height: 14),
             const VitacareFeatureTile(
-              icon: Icons.checklist_rounded,
-              title: 'Listagem organizada',
-              description: 'Acompanhe todos os pacientes em uma lista objetiva.',
+              icon: Icons.elderly_outlined,
+              title: 'Publico de cuidado continuo',
+              description:
+                  'Foco em idosos e pacientes com doencas cronicas que precisam de monitoramento frequente entre consultas.',
             ),
             const SizedBox(height: 10),
             const VitacareFeatureTile(
-              icon: Icons.notifications_active_outlined,
-              title: 'Alertas inteligentes',
-              description: 'Destaque automatico para casos que exigem atencao.',
+              icon: Icons.groups_2_outlined,
+              title: 'Coordenacao entre equipe e cuidadores',
+              description:
+                  'A proposta centraliza informacoes para profissionais, familiares e cuidadores com historico auditavel.',
             ),
             const SizedBox(height: 10),
-            _ActionButton(
-              title: 'Abrir Alertas e Status',
-              subtitle: 'Revise prioridades de acompanhamento.',
-              icon: Icons.warning_amber_rounded,
-              onTap: () => Navigator.pushReplacementNamed(context, '/alerts'),
+            const VitacareFeatureTile(
+              icon: Icons.data_usage_rounded,
+              title: 'Dados mockados para demonstracao',
+              description:
+                  'Nesta etapa academica, autenticacao, pacientes e registros sao simulados para demonstrar interface, navegacao e listagem.',
             ),
             const SizedBox(height: 10),
             _ActionButton(
               title: 'Tela Sobre',
-              subtitle: 'Informacoes academicas do projeto.',
+              subtitle: 'Consulte o resumo academico, objetivos e escopo atual do VitaCare.',
               icon: Icons.info_outline_rounded,
               onTap: () => Navigator.pushReplacementNamed(context, '/about'),
             ),
@@ -233,10 +249,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 }
 
 class _StatusChip extends StatelessWidget {
-  const _StatusChip({
-    required this.label,
-    required this.color,
-  });
+  const _StatusChip({required this.label, required this.color});
 
   final String label;
   final Color color;

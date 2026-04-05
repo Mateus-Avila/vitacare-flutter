@@ -43,18 +43,11 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       return;
     }
 
-    await showDialog<void>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Recuperacao solicitada'),
-        content: Text(result.message),
-        actions: [
-          FilledButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Entendi'),
-          ),
-        ],
-      ),
+    await showVitacareInfoDialog(
+      context,
+      title: 'Recuperacao solicitada',
+      message:
+          '${result.message}\n\nNesta etapa academica, o envio e apenas ilustrativo.',
     );
 
     if (!mounted) {
@@ -95,7 +88,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'Informe seu e-mail para simular o envio de recuperacao.',
+                              'Informe seu e-mail para simular a recuperacao de senha exigida pelo RF005.',
                               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                     color: VitacareColors.textSoft,
                                   ),

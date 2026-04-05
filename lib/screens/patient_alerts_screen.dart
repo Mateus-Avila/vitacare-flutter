@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:vitacare_flutter/core/vitacare_feedback.dart';
 import 'package:vitacare_flutter/models/health_record.dart';
 import 'package:vitacare_flutter/models/patient.dart';
 import 'package:vitacare_flutter/providers/patient_provider.dart';
@@ -33,7 +34,7 @@ class PatientAlertsScreen extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'Use esta tela para monitorar estados criticos e agir rapidamente.',
+                'Use esta listagem para monitorar pacientes com risco elevado e apoiar a coordenacao entre cuidadores e equipe.',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: VitacareColors.textSoft,
                     ),
@@ -146,24 +147,11 @@ class _AlertTile extends StatelessWidget {
   }
 
   void _showClinicalGuidance(BuildContext context) {
-    showDialog<void>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Plano rapido de acao'),
-        content: Text(
-          'Paciente: ${patient.name}\n\n'
-          '1. Confirmar sinais vitais novamente.\n'
-          '2. Notificar responsavel clinico.\n'
-          '3. Registrar condutas no historico.\n'
-          '4. Reavaliar em ate 30 minutos.',
-        ),
-        actions: [
-          FilledButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Entendi'),
-          ),
-        ],
-      ),
+    showVitacareInfoDialog(
+      context,
+      title: 'Plano rapido de acao',
+      message:
+          'Paciente: ${patient.name}\n\n1. Confirmar sinais vitais novamente.\n2. Notificar o responsavel clinico.\n3. Registrar condutas no historico.\n4. Reavaliar em ate 30 minutos.',
     );
   }
 }
@@ -192,7 +180,7 @@ class _NoCriticalAlertsState extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            'Continue registrando dados para manter o monitoramento ativo.',
+            'Continue registrando dados para manter o monitoramento ativo na demonstracao.',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: VitacareColors.textSoft,
                 ),

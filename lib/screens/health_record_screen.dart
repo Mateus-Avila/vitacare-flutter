@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:vitacare_flutter/core/vitacare_feedback.dart';
 import 'package:vitacare_flutter/models/health_record.dart';
 import 'package:vitacare_flutter/models/patient.dart';
 import 'package:vitacare_flutter/providers/patient_provider.dart';
@@ -34,27 +35,24 @@ class _HealthRecordScreenState extends State<HealthRecordScreen> {
     super.dispose();
   }
 
-  void _showSnackBar(String message, {bool isError = false}) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(message),
-          backgroundColor: isError ? Colors.red.shade700 : VitacareColors.primary,
-        ),
-      );
-  }
-
   Future<void> _saveRecord() async {
     FocusScope.of(context).unfocus();
 
     if (_selectedPatientId == null) {
-      _showSnackBar('Selecione um paciente para registrar.', isError: true);
+      showVitacareSnackBar(
+        context,
+        'Selecione um paciente para registrar.',
+        isError: true,
+      );
       return;
     }
 
     if (!(_formKey.currentState?.validate() ?? false)) {
-      _showSnackBar('Revise os dados de saude informados.', isError: true);
+      showVitacareSnackBar(
+        context,
+        'Revise os dados de saude informados.',
+        isError: true,
+      );
       return;
     }
 
@@ -63,7 +61,11 @@ class _HealthRecordScreenState extends State<HealthRecordScreen> {
     final int? glucose = int.tryParse(_glucoseController.text.trim());
 
     if (systolic == null || diastolic == null || glucose == null) {
-      _showSnackBar('Todos os valores devem ser numericos.', isError: true);
+      showVitacareSnackBar(
+        context,
+        'Todos os valores devem ser numericos.',
+        isError: true,
+      );
       return;
     }
 
@@ -81,32 +83,24 @@ class _HealthRecordScreenState extends State<HealthRecordScreen> {
     _notesController.clear();
 
     if (record.isCritical) {
-      await showDialog<void>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Alerta critico detectado'),
-          content: const Text(
-            'Os dados registrados indicam risco elevado. Priorize a reavaliacao do paciente.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Fechar'),
-            ),
-            FilledButton(
-              onPressed: () {
-                Navigator.pop(context);
-                Navigator.pushReplacementNamed(context, '/alerts');
-              },
-              child: const Text('Abrir alertas'),
-            ),
-          ],
-        ),
+      final bool openAlerts = await showVitacareConfirmationDialog(
+        context,
+        title: 'Alerta critico detectado',
+        message:
+            'Os dados registrados indicam risco elevado. Priorize a reavaliacao do paciente e acompanhe o caso na tela de alertas.',
+        confirmLabel: 'Abrir alertas',
+        cancelLabel: 'Fechar',
       );
+      if (openAlerts && mounted) {
+        Navigator.pushReplacementNamed(context, '/alerts');
+      }
       return;
     }
 
-    _showSnackBar('Registro salvo com sucesso.');
+    showVitacareSnackBar(
+      context,
+      'Registro salvo com sucesso no historico demonstrativo.',
+    );
   }
 
   @override
@@ -138,7 +132,7 @@ class _HealthRecordScreenState extends State<HealthRecordScreen> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'Informe sinais vitais e observacoes para atualizacao de status.',
+                            'Registre pressao arterial, glicemia e observacoes para apoiar a equipe no acompanhamento continuo do paciente.',
                             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                                   color: VitacareColors.textSoft,
                                 ),
@@ -219,7 +213,8 @@ class _HealthRecordScreenState extends State<HealthRecordScreen> {
                             maxLines: 5,
                             decoration: vitacareInputDecoration(
                               label: 'Observacoes',
-                              hint: 'Descreva evolucao, sintomas e orientacoes.',
+                              hint:
+                                  'Descreva sintomas, adesao, humor ou orientacoes da visita.',
                               icon: Icons.note_alt_outlined,
                             ),
                             validator: (value) {
@@ -261,7 +256,7 @@ class _HealthRecordScreenState extends State<HealthRecordScreen> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'Cadastre ao menos um paciente para registrar dados de saude.',
+                  'Cadastre ao menos um paciente para registrar parametros de saude, observacoes e sinais de risco.',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         color: VitacareColors.textStrong,
                         fontWeight: FontWeight.w700,

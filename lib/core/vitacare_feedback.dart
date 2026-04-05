@@ -16,3 +16,52 @@ void showVitacareSnackBar(
       ),
     );
 }
+
+Future<void> showVitacareInfoDialog(
+  BuildContext context, {
+  required String title,
+  required String message,
+  String actionLabel = 'Entendi',
+}) {
+  return showDialog<void>(
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      title: Text(title),
+      content: Text(message),
+      actions: [
+        FilledButton(
+          onPressed: () => Navigator.pop(dialogContext),
+          child: Text(actionLabel),
+        ),
+      ],
+    ),
+  );
+}
+
+Future<bool> showVitacareConfirmationDialog(
+  BuildContext context, {
+  required String title,
+  required String message,
+  String confirmLabel = 'Confirmar',
+  String cancelLabel = 'Cancelar',
+}) async {
+  final bool? confirmed = await showDialog<bool>(
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      title: Text(title),
+      content: Text(message),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(dialogContext, false),
+          child: Text(cancelLabel),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(dialogContext, true),
+          child: Text(confirmLabel),
+        ),
+      ],
+    ),
+  );
+
+  return confirmed ?? false;
+}

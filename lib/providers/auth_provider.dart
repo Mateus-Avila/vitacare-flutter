@@ -6,9 +6,9 @@ import 'package:vitacare_flutter/models/auth_result.dart';
 class AuthProvider extends ChangeNotifier {
   final List<AppUser> _users = const [
     AppUser(
-      name: 'Equipe Vitacare',
+      name: 'Equipe Academica VitaCare',
       email: 'admin@vitacare.com',
-      phone: '(11) 99999-0000',
+      phone: '(16) 99999-0000',
       password: '123456',
     ),
   ].toList();
@@ -53,7 +53,9 @@ class AuthProvider extends ChangeNotifier {
 
     _currentUser = account;
     notifyListeners();
-    return AuthResult.success('Acesso liberado. Bem-vindo ao painel VitaCare.');
+    return AuthResult.success(
+      'Login realizado com sucesso. Bem-vindo ao painel academico do VitaCare.',
+    );
   }
 
   AuthResult register({
@@ -104,7 +106,7 @@ class AuthProvider extends ChangeNotifier {
     _currentUser = user;
     notifyListeners();
     return AuthResult.success(
-      'Conta criada com sucesso. Voce ja pode usar o aplicativo.',
+      'Cadastro realizado com sucesso. Sua conta demonstrativa ja esta ativa.',
     );
   }
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:vitacare_flutter/core/vitacare_formatters.dart';
+import 'package:vitacare_flutter/core/vitacare_feedback.dart';
 import 'package:vitacare_flutter/models/patient.dart';
 import 'package:vitacare_flutter/providers/patient_provider.dart';
 import 'package:vitacare_flutter/theme/vitacare_colors.dart';
@@ -25,7 +26,7 @@ class PatientListScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Pacientes ativos (${patients.length})',
+                'Listagem principal de pacientes (${patients.length})',
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                       color: VitacareColors.textStrong,
                       fontWeight: FontWeight.w700,
@@ -33,7 +34,7 @@ class PatientListScreen extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'Visualize rapidamente o estado atual e os dados cadastrais.',
+                'Esta tela demonstra o RF007 com ListView e apresenta os pacientes acompanhados na base estatica do VitaCare.',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: VitacareColors.textSoft,
                     ),
@@ -158,26 +159,30 @@ class _PatientTile extends StatelessWidget {
   void _showPatientDetails(BuildContext context) {
     showDialog<void>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Resumo do paciente'),
         content: Text(
           'Codigo: ${patient.id}\n'
           'Nome: ${patient.name}\n'
           'Idade: ${patient.age} anos\n'
-          'Condicao: ${patient.chronicCondition}\n'
-          'Cuidador: ${patient.caregiver}\n'
+          'Condicao principal: ${patient.chronicCondition}\n'
+          'Cuidador responsavel: ${patient.caregiver}\n'
           'Telefone: ${patient.phone}\n'
           'Cadastro: ${VitacareFormatters.date(patient.createdAt)}',
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Fechar'),
           ),
           FilledButton(
             onPressed: () {
-              Navigator.pop(context);
-              Navigator.pushNamed(context, '/records/history');
+              Navigator.pop(dialogContext);
+              Navigator.pushNamed(context, '/records/history', arguments: patient.id);
+              showVitacareSnackBar(
+                context,
+                'Historico filtrado para ${patient.name}.',
+              );
             },
             child: const Text('Ver historico'),
           ),
@@ -216,7 +221,7 @@ class _EmptyPatientsState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Text(
-        'Nenhum paciente cadastrado ainda.',
+        'Nenhum paciente cadastrado ainda na base demonstrativa.',
         style: Theme.of(context).textTheme.titleMedium?.copyWith(
               color: VitacareColors.textSoft,
             ),

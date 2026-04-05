@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:vitacare_flutter/core/vitacare_feedback.dart';
 import 'package:vitacare_flutter/providers/auth_provider.dart';
 import 'package:vitacare_flutter/theme/vitacare_colors.dart';
 import 'package:vitacare_flutter/widgets/vitacare_logo.dart';
@@ -73,7 +74,17 @@ class VitacareAppDrawer extends StatelessWidget {
                 color: VitacareColors.primary,
               ),
               title: const Text('Sair'),
-              onTap: () {
+              onTap: () async {
+                final bool confirmed = await showVitacareConfirmationDialog(
+                  context,
+                  title: 'Encerrar sessao',
+                  message:
+                      'Deseja sair do VitaCare agora? Seus dados simulados continuarao disponiveis nesta demonstracao.',
+                  confirmLabel: 'Sair',
+                );
+                if (!confirmed || !context.mounted) {
+                  return;
+                }
                 context.read<AuthProvider>().logout();
                 Navigator.of(context).pushNamedAndRemoveUntil('/', (_) => false);
               },

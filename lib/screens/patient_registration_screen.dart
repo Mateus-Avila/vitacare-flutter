@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:vitacare_flutter/core/vitacare_feedback.dart';
 import 'package:vitacare_flutter/providers/patient_provider.dart';
 import 'package:vitacare_flutter/theme/vitacare_colors.dart';
 import 'package:vitacare_flutter/theme/vitacare_input_decoration.dart';
@@ -32,28 +33,25 @@ class _PatientRegistrationScreenState extends State<PatientRegistrationScreen> {
     super.dispose();
   }
 
-  void _showSnackBar(String message, {bool isError = false}) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(message),
-          backgroundColor: isError ? Colors.red.shade700 : VitacareColors.primary,
-        ),
-      );
-  }
-
   Future<void> _savePatient() async {
     FocusScope.of(context).unfocus();
 
     if (!(_formKey.currentState?.validate() ?? false)) {
-      _showSnackBar('Preencha os dados obrigatorios.', isError: true);
+      showVitacareSnackBar(
+        context,
+        'Preencha os dados obrigatorios do paciente.',
+        isError: true,
+      );
       return;
     }
 
     final int? age = int.tryParse(_ageController.text.trim());
     if (age == null || age < 1 || age > 120) {
-      _showSnackBar('Informe uma idade valida entre 1 e 120.', isError: true);
+      showVitacareSnackBar(
+        context,
+        'Informe uma idade valida entre 1 e 120.',
+        isError: true,
+      );
       return;
     }
 
@@ -65,21 +63,17 @@ class _PatientRegistrationScreenState extends State<PatientRegistrationScreen> {
           phone: _phoneController.text,
         );
 
-    await showDialog<void>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Paciente cadastrado'),
-        content: Text(
-          'Cadastro concluido com sucesso. Codigo gerado: $patientId.',
-        ),
-        actions: [
-          FilledButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Continuar'),
-          ),
-        ],
-      ),
+    await showVitacareInfoDialog(
+      context,
+      title: 'Paciente cadastrado',
+      message:
+          'Cadastro concluido com sucesso.\nCodigo gerado: $patientId.\n\nO paciente ja pode receber novos registros e aparecer nas listagens do projeto.',
+      actionLabel: 'Continuar',
     );
+
+    if (!mounted) {
+      return;
+    }
 
     _formKey.currentState?.reset();
     _nameController.clear();
@@ -88,7 +82,10 @@ class _PatientRegistrationScreenState extends State<PatientRegistrationScreen> {
     _caregiverController.clear();
     _phoneController.clear();
 
-    _showSnackBar('Paciente adicionado na listagem.');
+    showVitacareSnackBar(
+      context,
+      'Paciente adicionado com sucesso na listagem demonstrativa.',
+    );
   }
 
   @override
@@ -116,7 +113,7 @@ class _PatientRegistrationScreenState extends State<PatientRegistrationScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Registre os dados principais para acompanhamento clinico.',
+                      'Cadastre pacientes idosos ou cronicos para centralizar informacoes basicas de cuidado e acompanhamento continuo.',
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                             color: VitacareColors.textSoft,
                           ),
@@ -188,7 +185,7 @@ class _PatientRegistrationScreenState extends State<PatientRegistrationScreen> {
                       keyboardType: TextInputType.phone,
                       decoration: vitacareInputDecoration(
                         label: 'Telefone para contato',
-                        hint: '(11) 99999-9999',
+                        hint: '(16) 99999-9999',
                         icon: Icons.phone_outlined,
                       ),
                       validator: (value) {

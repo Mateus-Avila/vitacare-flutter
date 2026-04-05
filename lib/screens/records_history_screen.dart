@@ -53,7 +53,7 @@ class _RecordsHistoryScreenState extends State<RecordsHistoryScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Filtre por paciente para acompanhar tendencias de saude.',
+                'Consulte a serie de registros mockados do VitaCare e filtre por paciente para acompanhar a evolucao clinica.',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: VitacareColors.textSoft,
                     ),
@@ -217,7 +217,7 @@ class _EmptyHistoryState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Text(
-        'Nenhum registro encontrado para o filtro selecionado.',
+        'Nenhum registro encontrado para o filtro selecionado na demonstracao.',
         style: Theme.of(context).textTheme.titleMedium?.copyWith(
               color: VitacareColors.textSoft,
             ),

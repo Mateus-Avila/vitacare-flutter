@@ -158,14 +158,16 @@ class _LoginPageState extends State<LoginPage>
           const VitacareFeatureTile(
             icon: Icons.favorite_outline_rounded,
             title: 'Rotina segura',
-            description: 'Acompanhe idosos e pacientes cronicos com clareza e cuidado continuo.',
+            description:
+                'Acompanhe idosos e pacientes cronicos com clareza e cuidado continuo.',
             light: true,
           ),
           const SizedBox(height: 14),
           const VitacareFeatureTile(
             icon: Icons.monitor_heart_outlined,
             title: 'Visao centralizada',
-            description: 'Sinais, historico e observacoes em uma experiencia simples para a equipe.',
+            description:
+                'Sinais, historico e observacoes em uma experiencia simples para a equipe.',
             light: true,
           ),
         ],
@@ -196,7 +198,7 @@ class _LoginPageState extends State<LoginPage>
             ),
             const SizedBox(height: 6),
             Text(
-              'Use seu e-mail profissional para acessar a central Vitacare.',
+              'Acesse a demonstracao do VitaCare para acompanhar pacientes cronicos, idosos e rotinas de cuidado.',
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: VitacareColors.textSoft,
               ),
@@ -309,7 +311,7 @@ class _LoginPageState extends State<LoginPage>
         const VitacareLogo(),
         const SizedBox(height: 18),
         Text(
-          'Cuidado inteligente e humano para sua operacao.',
+          'Cuidado continuo, registro simples e comunicacao mais clara.',
           style: theme.textTheme.headlineSmall?.copyWith(
             color: textColor,
             fontWeight: FontWeight.w700,
@@ -319,7 +321,7 @@ class _LoginPageState extends State<LoginPage>
         ),
         const SizedBox(height: 12),
         Text(
-          'A plataforma para acompanhamento continuo de pacientes cronicos e idosos.',
+          'Projeto academico voltado a profissionais, cuidadores e equipes que acompanham parametros de saude no dia a dia.',
           style: theme.textTheme.bodyLarge?.copyWith(
             color: supportColor,
             height: 1.5,
