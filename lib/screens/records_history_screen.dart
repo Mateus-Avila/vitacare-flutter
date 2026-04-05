@@ -48,12 +48,12 @@ class _RecordsHistoryScreenState extends State<RecordsHistoryScreen> {
       child: VitacareGlassCard(
         child: Padding(
           padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: ListView(
             children: [
               DropdownButtonFormField<String?>(
                 key: ValueKey<String?>(_selectedPatientId),
                 initialValue: _selectedPatientId,
+                isExpanded: true,
                 decoration: const InputDecoration(
                   labelText: 'Filtro de paciente',
                   prefixIcon: Icon(Icons.filter_list_rounded),
@@ -61,12 +61,19 @@ class _RecordsHistoryScreenState extends State<RecordsHistoryScreen> {
                 items: [
                   const DropdownMenuItem<String?>(
                     value: null,
-                    child: Text('Todos os pacientes'),
+                    child: Text(
+                      'Todos os pacientes',
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                   ...patients.map(
                     (patient) => DropdownMenuItem<String?>(
                       value: patient.id,
-                      child: Text('${patient.name} (${patient.id})'),
+                      child: Text(
+                        '${patient.name} (${patient.id})',
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
                     ),
                   ),
                 ],
@@ -79,22 +86,23 @@ class _RecordsHistoryScreenState extends State<RecordsHistoryScreen> {
                 _SummaryPanel(summary: summary),
                 const SizedBox(height: 12),
               ],
-              Expanded(
-                child: records.isEmpty
-                    ? const _EmptyHistoryState()
-                    : ListView.separated(
-                        itemCount: records.length,
-                        separatorBuilder: (context, index) =>
-                            const SizedBox(height: 10),
-                        itemBuilder: (context, index) {
-                          final HealthRecord record = records[index];
-                          final Patient? patient = provider.getPatientById(
-                            record.patientId,
-                          );
-                          return _HistoryTile(record: record, patient: patient);
-                        },
-                      ),
-              ),
+              if (records.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 32),
+                  child: _EmptyHistoryState(),
+                )
+              else
+                ...List.generate(records.length, (index) {
+                  final HealthRecord record = records[index];
+                  final Patient? patient = provider.getPatientById(
+                    record.patientId,
+                  );
+
+                  return Padding(
+                    padding: EdgeInsets.only(bottom: index == records.length - 1 ? 0 : 10),
+                    child: _HistoryTile(record: record, patient: patient),
+                  );
+                }),
             ],
           ),
         ),
@@ -320,7 +328,7 @@ class _SummaryPanel extends StatelessWidget {
 
   Widget _summaryChip(String label, String value) {
     return Container(
-      constraints: const BoxConstraints(minWidth: 180),
+      constraints: const BoxConstraints(minWidth: 140, maxWidth: 220),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,

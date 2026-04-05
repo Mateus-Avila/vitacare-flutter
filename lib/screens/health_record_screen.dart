@@ -185,6 +185,7 @@ class _HealthRecordScreenState extends State<HealthRecordScreen> {
                           DropdownButtonFormField<String>(
                             key: ValueKey<String?>(_selectedPatientId),
                             initialValue: _selectedPatientId,
+                            isExpanded: true,
                             decoration: vitacareInputDecoration(
                               label: 'Paciente',
                               hint: 'Selecione um paciente',
@@ -196,6 +197,8 @@ class _HealthRecordScreenState extends State<HealthRecordScreen> {
                                     value: patient.id,
                                     child: Text(
                                       '${patient.name} (${patient.id})',
+                                      overflow: TextOverflow.ellipsis,
+                                      maxLines: 1,
                                     ),
                                   ),
                                 )
@@ -480,6 +483,7 @@ class _StatusDropdown extends StatelessWidget {
   Widget build(BuildContext context) {
     return DropdownButtonFormField<String>(
       initialValue: value,
+      isExpanded: true,
       decoration: vitacareInputDecoration(
         label: label,
         hint: label,
@@ -487,8 +491,14 @@ class _StatusDropdown extends StatelessWidget {
       ),
       items: options
           .map(
-            (option) =>
-                DropdownMenuItem<String>(value: option, child: Text(option)),
+            (option) => DropdownMenuItem<String>(
+              value: option,
+              child: Text(
+                option,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
+            ),
           )
           .toList(),
       onChanged: onChanged,
