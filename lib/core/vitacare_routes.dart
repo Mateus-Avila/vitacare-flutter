@@ -8,13 +8,12 @@ class VitacareRoutes {
   static const healthRecord = '/records/register';
   static const recordsHistory = '/records/history';
   static const alerts = '/alerts';
+  static const careManagement = '/care-management';
+  static const search = '/search';
+  static const apiCep = '/api/cep';
   static const about = '/about';
 
-  static const publicRoutes = <String>{
-    login,
-    register,
-    forgotPassword,
-  };
+  static const publicRoutes = <String>{login, register, forgotPassword};
 
   static const privateRoutes = <String>{
     dashboard,
@@ -23,6 +22,9 @@ class VitacareRoutes {
     healthRecord,
     recordsHistory,
     alerts,
+    careManagement,
+    search,
+    apiCep,
     about,
   };
 }

@@ -1,12 +1,16 @@
 import 'package:device_preview_plus/device_preview_plus.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:vitacare_flutter/core/vitacare_routes.dart';
+import 'package:vitacare_flutter/firebase_options.dart';
 import 'package:vitacare_flutter/providers/auth_provider.dart';
 import 'package:vitacare_flutter/providers/patient_provider.dart';
 import 'package:vitacare_flutter/screens/about_screen.dart';
+import 'package:vitacare_flutter/screens/care_management_screen.dart';
+import 'package:vitacare_flutter/screens/cep_lookup_screen.dart';
 import 'package:vitacare_flutter/screens/dashboard_screen.dart';
 import 'package:vitacare_flutter/screens/forgot_password_page.dart';
 import 'package:vitacare_flutter/screens/health_record_screen.dart';
@@ -16,9 +20,13 @@ import 'package:vitacare_flutter/screens/patient_list_screen.dart';
 import 'package:vitacare_flutter/screens/patient_registration_screen.dart';
 import 'package:vitacare_flutter/screens/records_history_screen.dart';
 import 'package:vitacare_flutter/screens/register_page.dart';
+import 'package:vitacare_flutter/screens/search_screen.dart';
 import 'package:vitacare_flutter/theme/vitacare_colors.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
   runApp(
     DevicePreview(
       enabled: !kReleaseMode,
@@ -52,6 +60,12 @@ class VitacareApp extends StatelessWidget {
         );
       case VitacareRoutes.alerts:
         return const PatientAlertsScreen();
+      case VitacareRoutes.careManagement:
+        return const CareManagementScreen();
+      case VitacareRoutes.search:
+        return const SearchScreen();
+      case VitacareRoutes.apiCep:
+        return const CepLookupScreen();
       case VitacareRoutes.about:
         return const AboutScreen();
       default:
@@ -102,7 +116,9 @@ class VitacareApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider<AuthProvider>(create: (_) => AuthProvider()),
-        ChangeNotifierProvider<PatientProvider>(create: (_) => PatientProvider()),
+        ChangeNotifierProvider<PatientProvider>(
+          create: (_) => PatientProvider(),
+        ),
       ],
       child: Consumer<AuthProvider>(
         builder: (context, authProvider, _) {
@@ -110,17 +126,18 @@ class VitacareApp extends StatelessWidget {
             debugShowCheckedModeBanner: false,
             title: 'Vitacare',
             theme: ThemeData(
-              colorScheme: ColorScheme.fromSeed(
-                seedColor: VitacareColors.primary,
-                brightness: Brightness.light,
-              ).copyWith(
-                primary: VitacareColors.primary,
-                onPrimary: Colors.white,
-                secondary: VitacareColors.accent,
-                surface: Colors.white,
-                onSurface: VitacareColors.textStrong,
-                outline: VitacareColors.border,
-              ),
+              colorScheme:
+                  ColorScheme.fromSeed(
+                    seedColor: VitacareColors.primary,
+                    brightness: Brightness.light,
+                  ).copyWith(
+                    primary: VitacareColors.primary,
+                    onPrimary: Colors.white,
+                    secondary: VitacareColors.accent,
+                    surface: Colors.white,
+                    onSurface: VitacareColors.textStrong,
+                    outline: VitacareColors.border,
+                  ),
               textTheme: GoogleFonts.montserratTextTheme(),
               useMaterial3: true,
               scaffoldBackgroundColor: VitacareColors.background,

@@ -5,10 +5,12 @@ class VitacarePrimaryButton extends StatefulWidget {
     super.key,
     required this.onPressed,
     required this.label,
+    this.isLoading = false,
   });
 
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
   final String label;
+  final bool isLoading;
 
   @override
   State<VitacarePrimaryButton> createState() => _VitacarePrimaryButtonState();
@@ -29,8 +31,17 @@ class _VitacarePrimaryButtonState extends State<VitacarePrimaryButton> {
           onPointerUp: (_) => setState(() => _isPressed = false),
           onPointerCancel: (_) => setState(() => _isPressed = false),
           child: FilledButton(
-            onPressed: widget.onPressed,
-            child: Text(widget.label),
+            onPressed: widget.isLoading ? null : widget.onPressed,
+            child: widget.isLoading
+                ? const SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.4,
+                      color: Colors.white,
+                    ),
+                  )
+                : Text(widget.label),
           ),
         ),
       ),

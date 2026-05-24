@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:vitacare_flutter/core/vitacare_feedback.dart';
 import 'package:vitacare_flutter/core/vitacare_routes.dart';
+import 'package:vitacare_flutter/models/health_record.dart';
+import 'package:vitacare_flutter/models/patient.dart';
 import 'package:vitacare_flutter/providers/auth_provider.dart';
 import 'package:vitacare_flutter/providers/patient_provider.dart';
 import 'package:vitacare_flutter/theme/vitacare_colors.dart';
@@ -19,14 +21,15 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   bool _alertShown = false;
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
+  Future<void> _maybeShowCriticalAlert(
+    PatientProvider provider,
+    List<Patient> patients,
+  ) async {
     if (_alertShown) {
       return;
     }
 
-    final int alerts = context.read<PatientProvider>().criticalAlertsCount;
+    final alerts = provider.criticalAlertsCountFrom(patients);
     if (alerts <= 0) {
       return;
     }
@@ -41,7 +44,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         context,
         title: 'Alerta clinico',
         message:
-            'Existem $alerts pacientes com prioridade alta na base demonstrativa. Deseja abrir a tela de Alertas e Status agora?',
+            'Existem $alerts pacientes com prioridade alta no Firestore para este usuario. Deseja abrir a tela de Alertas e Status agora?',
         confirmLabel: 'Ver alertas',
         cancelLabel: 'Agora nao',
       );
@@ -55,86 +58,112 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final AuthProvider authProvider = context.watch<AuthProvider>();
-    final PatientProvider patientProvider = context.watch<PatientProvider>();
+    final PatientProvider patientProvider = context.read<PatientProvider>();
 
     return VitacarePageScaffold(
       title: 'Painel do VitaCare',
       subtitle:
-          'Acompanhe os modulos principais do sistema e o panorama atual dos pacientes em cuidado continuo.',
+          'Panorama em tempo real dos dados gravados no Firebase para o usuario logado.',
       selectedRoute: VitacareRoutes.dashboard,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final bool isWide = constraints.maxWidth >= 980;
-          return SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                VitacareGlassCard(
-                  child: Padding(
-                    padding: const EdgeInsets.all(22),
+      child: StreamBuilder<List<Patient>>(
+        stream: patientProvider.watchPatients(),
+        builder: (context, patientSnapshot) {
+          if (patientSnapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (patientSnapshot.hasError) {
+            return const Center(
+              child: Text('Nao foi possivel carregar os pacientes.'),
+            );
+          }
+
+          final patients = patientSnapshot.data ?? <Patient>[];
+          _maybeShowCriticalAlert(patientProvider, patients);
+
+          return StreamBuilder<List<HealthRecord>>(
+            stream: patientProvider.watchHealthRecords(),
+            builder: (context, recordSnapshot) {
+              final records = recordSnapshot.data ?? <HealthRecord>[];
+              return LayoutBuilder(
+                builder: (context, constraints) {
+                  final bool isWide = constraints.maxWidth >= 980;
+                  return SingleChildScrollView(
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Text(
-                          'Bem-vindo, ${authProvider.currentUser?.name ?? 'Profissional'}',
-                          style: Theme.of(context).textTheme.headlineSmall
-                              ?.copyWith(
-                                color: VitacareColors.textStrong,
-                                fontWeight: FontWeight.w700,
-                              ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'O VitaCare apoia o registro dos cuidados, a visualizacao do historico e a coordenacao entre profissionais e cuidadores.',
-                          style: Theme.of(context).textTheme.bodyLarge
-                              ?.copyWith(
-                                color: VitacareColors.textSoft,
-                                height: 1.5,
-                              ),
-                        ),
-                        const SizedBox(height: 18),
-                        Wrap(
-                          spacing: 12,
-                          runSpacing: 12,
-                          children: [
-                            _StatusChip(
-                              label:
-                                  '${patientProvider.patients.length} pacientes acompanhados',
-                              color: VitacareColors.primary,
+                        VitacareGlassCard(
+                          child: Padding(
+                            padding: const EdgeInsets.all(22),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Bem-vindo, ${authProvider.currentUser?.name ?? 'Profissional'}',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .headlineSmall
+                                      ?.copyWith(
+                                        color: VitacareColors.textStrong,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'O VitaCare agora usa Firebase Authentication e Cloud Firestore com dados isolados por usuario.',
+                                  style: Theme.of(context).textTheme.bodyLarge
+                                      ?.copyWith(
+                                        color: VitacareColors.textSoft,
+                                        height: 1.5,
+                                      ),
+                                ),
+                                const SizedBox(height: 18),
+                                Wrap(
+                                  spacing: 12,
+                                  runSpacing: 12,
+                                  children: [
+                                    _StatusChip(
+                                      label:
+                                          '${patients.length} pacientes acompanhados',
+                                      color: VitacareColors.primary,
+                                    ),
+                                    _StatusChip(
+                                      label:
+                                          '${records.length} registros de saude',
+                                      color: VitacareColors.accent,
+                                    ),
+                                    _StatusChip(
+                                      label:
+                                          '${patientProvider.criticalAlertsCountFrom(patients)} alertas prioritarios',
+                                      color: Colors.red.shade700,
+                                    ),
+                                  ],
+                                ),
+                              ],
                             ),
-                            _StatusChip(
-                              label:
-                                  '${patientProvider.allRecordsSorted.length} registros de saude',
-                              color: VitacareColors.accent,
-                            ),
-                            _StatusChip(
-                              label:
-                                  '${patientProvider.criticalAlertsCount} alertas prioritarios',
-                              color: Colors.red.shade700,
-                            ),
-                          ],
+                          ),
                         ),
+                        const SizedBox(height: 16),
+                        if (isWide)
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(child: _buildModules(context)),
+                              const SizedBox(width: 16),
+                              Expanded(child: _buildAcademicSupport(context)),
+                            ],
+                          )
+                        else ...[
+                          _buildModules(context),
+                          const SizedBox(height: 16),
+                          _buildAcademicSupport(context),
+                        ],
                       ],
                     ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                if (isWide)
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(child: _buildModules(context)),
-                      const SizedBox(width: 16),
-                      Expanded(child: _buildAcademicSupport(context)),
-                    ],
-                  )
-                else ...[
-                  _buildModules(context),
-                  const SizedBox(height: 16),
-                  _buildAcademicSupport(context),
-                ],
-              ],
-            ),
+                  );
+                },
+              );
+            },
           );
         },
       ),
@@ -157,7 +186,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
             const SizedBox(height: 6),
             Text(
-              'Os modulos abaixo representam o fluxo principal de cadastro, acompanhamento e monitoramento clinico do VitaCare.',
+              'Os modulos abaixo cobrem autenticacao, Firestore, StreamBuilder, pesquisa e API REST.',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: VitacareColors.textSoft,
                 height: 1.45,
@@ -166,8 +195,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             const SizedBox(height: 16),
             _ActionButton(
               title: '1. Cadastro de paciente',
-              subtitle:
-                  'Registra dados basicos do paciente e do cuidador responsavel.',
+              subtitle: 'Insere documentos na colecao pacientes.',
               icon: Icons.person_add_alt_1_rounded,
               onTap: () => Navigator.pushReplacementNamed(
                 context,
@@ -177,8 +205,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             const SizedBox(height: 10),
             _ActionButton(
               title: '2. Listagem de pacientes',
-              subtitle:
-                  'Exibe a lista principal com status e acesso rapido ao acompanhamento.',
+              subtitle: 'StreamBuilder com ListView e edicao em tempo real.',
               icon: Icons.list_alt_rounded,
               onTap: () => Navigator.pushReplacementNamed(
                 context,
@@ -188,8 +215,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             const SizedBox(height: 10),
             _ActionButton(
               title: '3. Registro de dados de saude',
-              subtitle:
-                  'Salva pressao arterial, glicemia e observacoes clinicas.',
+              subtitle: 'Insere documentos na colecao registros_saude.',
               icon: Icons.monitor_heart_rounded,
               onTap: () => Navigator.pushReplacementNamed(
                 context,
@@ -199,8 +225,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             const SizedBox(height: 10),
             _ActionButton(
               title: '4. Historico de registros',
-              subtitle:
-                  'Mostra a evolucao dos registros de forma ordenada e filtravel.',
+              subtitle: 'Recupera e atualiza registros em tempo real.',
               icon: Icons.timeline_rounded,
               onTap: () => Navigator.pushReplacementNamed(
                 context,
@@ -210,12 +235,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
             const SizedBox(height: 10),
             _ActionButton(
               title: '5. Alertas e status',
-              subtitle:
-                  'Destaca pacientes em prioridade alta para apoio da equipe.',
+              subtitle: 'Lista pacientes criticos filtrados pelo usuario.',
               icon: Icons.warning_amber_rounded,
               onTap: () => Navigator.pushReplacementNamed(
                 context,
                 VitacareRoutes.alerts,
+              ),
+            ),
+            const SizedBox(height: 10),
+            _ActionButton(
+              title: '6. Acoes e metas',
+              subtitle: 'Gerencia atividades_cuidado e metas_cuidado.',
+              icon: Icons.task_alt_rounded,
+              onTap: () => Navigator.pushReplacementNamed(
+                context,
+                VitacareRoutes.careManagement,
+              ),
+            ),
+            const SizedBox(height: 10),
+            _ActionButton(
+              title: '7. Pesquisa e API',
+              subtitle: 'Busca ordenada e consulta ViaCEP.',
+              icon: Icons.search_rounded,
+              onTap: () => Navigator.pushReplacementNamed(
+                context,
+                VitacareRoutes.search,
               ),
             ),
           ],
@@ -232,7 +276,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Contexto do projeto',
+              'Contexto avaliativo',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 color: VitacareColors.textStrong,
                 fontWeight: FontWeight.w700,
@@ -240,30 +284,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
             const SizedBox(height: 14),
             const VitacareFeatureTile(
-              icon: Icons.elderly_outlined,
-              title: 'Cuidado continuo',
+              icon: Icons.verified_user_outlined,
+              title: 'Firebase Authentication',
               description:
-                  'Foco em idosos e pacientes com doencas cronicas que precisam de monitoramento frequente entre consultas.',
+                  'Login, cadastro e recuperacao de senha usam o projeto Firebase ja configurado.',
             ),
             const SizedBox(height: 10),
             const VitacareFeatureTile(
-              icon: Icons.groups_2_outlined,
-              title: 'Coordenacao entre equipe e cuidadores',
+              icon: Icons.cloud_done_outlined,
+              title: 'Cloud Firestore',
               description:
-                  'A proposta centraliza informacoes para profissionais, familiares e cuidadores com historico auditavel.',
+                  'Pacientes, registros, atividades e metas sao salvos com uid e consultados por usuario.',
             ),
             const SizedBox(height: 10),
             const VitacareFeatureTile(
-              icon: Icons.data_usage_rounded,
-              title: 'Demonstracao academica',
+              icon: Icons.travel_explore_rounded,
+              title: 'API REST publica',
               description:
-                  'Nesta entrega, autenticacao, pacientes, registros e indicadores analiticos sao apresentados em ambiente demonstrativo para validar interface e navegacao.',
+                  'A consulta de CEP usa ViaCEP em uma tela propria com loading, erro e resultado.',
             ),
             const SizedBox(height: 10),
             _ActionButton(
               title: 'Tela Sobre',
-              subtitle:
-                  'Consulte o resumo academico, objetivos e escopo atual do VitaCare.',
+              subtitle: 'Resumo academico, objetivos e escopo atual.',
               icon: Icons.info_outline_rounded,
               onTap: () =>
                   Navigator.pushReplacementNamed(context, VitacareRoutes.about),

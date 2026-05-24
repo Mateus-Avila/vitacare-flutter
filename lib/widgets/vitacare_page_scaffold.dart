@@ -59,16 +59,15 @@ class VitacarePageScaffold extends StatelessWidget {
                       child: Align(
                         alignment: Alignment.topCenter,
                         child: ConstrainedBox(
-                          constraints: BoxConstraints(maxWidth: maxContentWidth),
+                          constraints: BoxConstraints(
+                            maxWidth: maxContentWidth,
+                          ),
                           child: Padding(
                             padding: const EdgeInsets.all(20),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                _PageHeader(
-                                  title: title,
-                                  subtitle: subtitle,
-                                ),
+                                _PageHeader(title: title, subtitle: subtitle),
                                 const SizedBox(height: 20),
                                 Expanded(child: child),
                               ],
@@ -89,10 +88,7 @@ class VitacarePageScaffold extends StatelessWidget {
 }
 
 class _PageHeader extends StatelessWidget {
-  const _PageHeader({
-    required this.title,
-    this.subtitle,
-  });
+  const _PageHeader({required this.title, this.subtitle});
 
   final String title;
   final String? subtitle;

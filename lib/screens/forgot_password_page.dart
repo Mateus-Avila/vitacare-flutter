@@ -36,7 +36,13 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     }
 
     final String email = _emailController.text.trim();
-    final result = context.read<AuthProvider>().requestPasswordRecovery(email);
+    final result = await context.read<AuthProvider>().requestPasswordRecovery(
+      email,
+    );
+
+    if (!mounted) {
+      return;
+    }
 
     if (!result.isSuccess) {
       showVitacareSnackBar(context, result.message, isError: true);
@@ -58,6 +64,8 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isLoading = context.watch<AuthProvider>().isLoading;
+
     return Scaffold(
       body: Stack(
         children: [
@@ -80,7 +88,8 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                             const SizedBox(height: 16),
                             Text(
                               'Esqueceu a senha?',
-                              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                              style: Theme.of(context).textTheme.headlineSmall
+                                  ?.copyWith(
                                     fontWeight: FontWeight.w700,
                                     color: VitacareColors.textStrong,
                                   ),
@@ -89,9 +98,8 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                             const SizedBox(height: 8),
                             Text(
                               'Informe seu e-mail para solicitar a recuperacao de senha da demonstracao academica.',
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: VitacareColors.textSoft,
-                                  ),
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(color: VitacareColors.textSoft),
                               textAlign: TextAlign.center,
                             ),
                             const SizedBox(height: 20),
@@ -117,7 +125,10 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                             const SizedBox(height: 18),
                             VitacarePrimaryButton(
                               onPressed: _sendRecovery,
-                              label: 'Enviar recuperacao',
+                              label: isLoading
+                                  ? 'Enviando...'
+                                  : 'Enviar recuperacao',
+                              isLoading: isLoading,
                             ),
                             const SizedBox(height: 10),
                             TextButton(

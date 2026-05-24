@@ -75,6 +75,21 @@ class _VitacareNavigationContent extends StatelessWidget {
             icon: Icons.warning_amber_rounded,
           ),
           _NavigationDestinationData(
+            label: 'Acoes e Metas',
+            route: VitacareRoutes.careManagement,
+            icon: Icons.task_alt_rounded,
+          ),
+          _NavigationDestinationData(
+            label: 'Pesquisa',
+            route: VitacareRoutes.search,
+            icon: Icons.search_rounded,
+          ),
+          _NavigationDestinationData(
+            label: 'Consulta CEP',
+            route: VitacareRoutes.apiCep,
+            icon: Icons.travel_explore_rounded,
+          ),
+          _NavigationDestinationData(
             label: 'Sobre o App',
             route: VitacareRoutes.about,
             icon: Icons.info_outline_rounded,
@@ -87,7 +102,12 @@ class _VitacareNavigationContent extends StatelessWidget {
 
     return SafeArea(
       child: Padding(
-        padding: EdgeInsets.fromLTRB(embedded ? 12 : 8, 16, embedded ? 12 : 8, 12),
+        padding: EdgeInsets.fromLTRB(
+          embedded ? 12 : 8,
+          16,
+          embedded ? 12 : 8,
+          12,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -143,11 +163,14 @@ class _VitacareNavigationContent extends StatelessWidget {
                 if (!confirmed || !context.mounted) {
                   return;
                 }
-                context.read<AuthProvider>().logout();
-                Navigator.of(context).pushNamedAndRemoveUntil(
-                  VitacareRoutes.login,
-                  (_) => false,
-                );
+                final authProvider = context.read<AuthProvider>();
+                await authProvider.logout();
+                if (!context.mounted) {
+                  return;
+                }
+                Navigator.of(
+                  context,
+                ).pushNamedAndRemoveUntil(VitacareRoutes.login, (_) => false);
               },
               icon: const Icon(Icons.logout_rounded),
               label: const Text('Sair'),

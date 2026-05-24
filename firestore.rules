@@ -1,0 +1,45 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return isAuth() && request.auth.uid == uid;
+    }
+
+    match /pacientes/{patientId} {
+      allow read:   if isOwner(resource.data.uid);
+      allow create: if isOwner(request.resource.data.uid);
+      allow update: if isOwner(resource.data.uid);
+      allow delete: if isOwner(resource.data.uid);
+    }
+
+    match /registros_saude/{recordId} {
+      allow read:   if isOwner(resource.data.uid);
+      allow create: if isOwner(request.resource.data.uid);
+      allow update: if isOwner(resource.data.uid);
+      allow delete: if isOwner(resource.data.uid);
+    }
+
+    match /atividades_cuidado/{taskId} {
+      allow read:   if isOwner(resource.data.uid);
+      allow create: if isOwner(request.resource.data.uid);
+      allow update: if isOwner(resource.data.uid);
+      allow delete: if isOwner(resource.data.uid);
+    }
+
+    match /metas_cuidado/{goalId} {
+      allow read:   if isOwner(resource.data.uid);
+      allow create: if isOwner(request.resource.data.uid);
+      allow update: if isOwner(resource.data.uid);
+      allow delete: if isOwner(resource.data.uid);
+    }
+
+    match /usuarios/{userId} {
+      allow read, write: if isAuth() && request.auth.uid == userId;
+    }
+  }
+}

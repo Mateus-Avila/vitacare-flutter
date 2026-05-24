@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:vitacare_flutter/core/vitacare_feedback.dart';
+import 'package:vitacare_flutter/core/vitacare_formatters.dart';
 import 'package:vitacare_flutter/core/vitacare_routes.dart';
 import 'package:vitacare_flutter/models/health_record.dart';
 import 'package:vitacare_flutter/models/patient.dart';
@@ -15,51 +16,92 @@ class PatientAlertsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final PatientProvider provider = context.watch<PatientProvider>();
-    final List<Patient> alerts = provider.patientsWithCriticalAlerts;
+    final PatientProvider provider = context.read<PatientProvider>();
 
     return VitacarePageScaffold(
       title: 'Alertas e Status do Paciente',
       subtitle:
-          'Monitore pacientes em prioridade alta e acione orientacoes de acompanhamento quando necessario.',
+          'Monitore pacientes em prioridade alta a partir dos ultimos registros salvos no Firestore.',
       selectedRoute: VitacareRoutes.alerts,
       child: VitacareGlassCard(
         child: Padding(
           padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Pacientes com prioridade alta: ${alerts.length}',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: VitacareColors.textStrong,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Expanded(
-                child: alerts.isEmpty
-                    ? const _NoCriticalAlertsState()
-                    : ListView.separated(
-                        itemCount: alerts.length,
-                        separatorBuilder: (context, index) =>
-                            const SizedBox(height: 10),
-                        itemBuilder: (context, index) {
-                          final Patient patient = alerts[index];
-                          final HealthRecord? latest = provider
-                              .latestRecordForPatient(patient.id);
-                          final PatientProgressSummary? summary = provider
-                              .summaryForPatient(patient.id);
+          child: StreamBuilder<List<Patient>>(
+            stream: provider.watchPatients(),
+            builder: (context, patientSnapshot) {
+              if (patientSnapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (patientSnapshot.hasError) {
+                return const Center(child: Text('Erro ao carregar alertas.'));
+              }
 
-                          return _AlertTile(
-                            patient: patient,
-                            latest: latest,
-                            summary: summary,
-                          );
-                        },
+              final patients = patientSnapshot.data ?? <Patient>[];
+              final alerts = provider.criticalPatientsFrom(patients);
+
+              return StreamBuilder<List<HealthRecord>>(
+                stream: provider.watchHealthRecords(),
+                builder: (context, recordSnapshot) {
+                  final records = recordSnapshot.data ?? <HealthRecord>[];
+
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Pacientes com prioridade alta: ${alerts.length}',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: VitacareColors.textStrong,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
-              ),
-            ],
+                      const SizedBox(height: 12),
+                      Expanded(
+                        child: alerts.isEmpty
+                            ? const _NoCriticalAlertsState()
+                            : ListView.builder(
+                                itemCount: alerts.length,
+                                itemBuilder: (context, index) {
+                                  final patient = alerts[index];
+                                  final patientRecords =
+                                      records
+                                          .where(
+                                            (record) =>
+                                                record.patientId == patient.id,
+                                          )
+                                          .toList()
+                                        ..sort(
+                                          (a, b) => b.recordedAt.compareTo(
+                                            a.recordedAt,
+                                          ),
+                                        );
+                                  final latest = patientRecords.isEmpty
+                                      ? null
+                                      : patientRecords.first;
+                                  final summary = provider.summaryForRecords(
+                                    patientRecords,
+                                    patient.createdAt,
+                                  );
+
+                                  return Padding(
+                                    padding: EdgeInsets.only(
+                                      bottom: index == alerts.length - 1
+                                          ? 0
+                                          : 10,
+                                    ),
+                                    child: _AlertTile(
+                                      patient: patient,
+                                      latest: latest,
+                                      summary: summary,
+                                    ),
+                                  );
+                                },
+                              ),
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
           ),
         ),
       ),
@@ -134,7 +176,7 @@ class _AlertTile extends StatelessWidget {
           const SizedBox(height: 8),
           if (latest != null)
             Text(
-              'Ultimo registro -> Sistolica ${latest!.systolic}, Diastolica ${latest!.diastolic}, Glicemia ${latest!.glucose}',
+              'Ultimo registro: ${VitacareFormatters.dateTime(latest!.recordedAt)} | Sistolica ${latest!.systolic}, Diastolica ${latest!.diastolic}, Glicemia ${latest!.glucose}',
               style: const TextStyle(
                 color: VitacareColors.textStrong,
                 fontWeight: FontWeight.w600,
@@ -143,7 +185,7 @@ class _AlertTile extends StatelessWidget {
           if (latest != null) ...[
             const SizedBox(height: 4),
             Text(
-              'Indicadores complementares -> Peso ${latest!.weight.toStringAsFixed(1)} kg | ${latest!.symptoms}',
+              'Peso ${latest!.weight.toStringAsFixed(1)} kg | ${latest!.symptoms}',
               style: const TextStyle(
                 color: VitacareColors.textSoft,
                 height: 1.45,
@@ -177,10 +219,24 @@ class _AlertTile extends StatelessWidget {
           const SizedBox(height: 10),
           Align(
             alignment: Alignment.centerRight,
-            child: OutlinedButton.icon(
-              onPressed: () => _showClinicalGuidance(context),
-              icon: const Icon(Icons.assignment_late_outlined),
-              label: const Text('Orientacao'),
+            child: Wrap(
+              spacing: 8,
+              children: [
+                OutlinedButton.icon(
+                  onPressed: () => Navigator.pushNamed(
+                    context,
+                    VitacareRoutes.recordsHistory,
+                    arguments: patient.id,
+                  ),
+                  icon: const Icon(Icons.history_rounded),
+                  label: const Text('Historico'),
+                ),
+                OutlinedButton.icon(
+                  onPressed: () => _showClinicalGuidance(context),
+                  icon: const Icon(Icons.assignment_late_outlined),
+                  label: const Text('Orientacao'),
+                ),
+              ],
             ),
           ),
         ],
@@ -235,11 +291,19 @@ class _NoCriticalAlertsState extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            'Continue registrando dados para manter o monitoramento ativo na demonstracao.',
+            'Os dados exibidos aqui sao filtrados pelo uid do usuario logado.',
             style: Theme.of(
               context,
             ).textTheme.bodyMedium?.copyWith(color: VitacareColors.textSoft),
             textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 10),
+          FilledButton(
+            onPressed: () => Navigator.pushReplacementNamed(
+              context,
+              VitacareRoutes.healthRecord,
+            ),
+            child: const Text('Criar registro de saude'),
           ),
         ],
       ),

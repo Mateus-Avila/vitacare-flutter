@@ -12,7 +12,8 @@ class PatientRegistrationScreen extends StatefulWidget {
   const PatientRegistrationScreen({super.key});
 
   @override
-  State<PatientRegistrationScreen> createState() => _PatientRegistrationScreenState();
+  State<PatientRegistrationScreen> createState() =>
+      _PatientRegistrationScreenState();
 }
 
 class _PatientRegistrationScreenState extends State<PatientRegistrationScreen> {
@@ -22,6 +23,8 @@ class _PatientRegistrationScreenState extends State<PatientRegistrationScreen> {
   final TextEditingController _conditionController = TextEditingController();
   final TextEditingController _caregiverController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
+
+  bool _isSaving = false;
 
   @override
   void dispose() {
@@ -55,37 +58,58 @@ class _PatientRegistrationScreenState extends State<PatientRegistrationScreen> {
       return;
     }
 
-    final String patientId = context.read<PatientProvider>().addPatient(
-          name: _nameController.text,
-          age: age,
-          chronicCondition: _conditionController.text,
-          caregiver: _caregiverController.text,
-          phone: _phoneController.text,
-        );
+    setState(() => _isSaving = true);
 
-    await showVitacareInfoDialog(
-      context,
-      title: 'Paciente cadastrado',
-      message:
-          'Cadastro concluido com sucesso.\nCodigo gerado: $patientId.\n\nO paciente ja pode receber novos registros e aparecer nas listagens do projeto.',
-      actionLabel: 'Continuar',
-    );
+    try {
+      final String patientId = await context.read<PatientProvider>().addPatient(
+        name: _nameController.text,
+        age: age,
+        chronicCondition: _conditionController.text,
+        caregiver: _caregiverController.text,
+        phone: _phoneController.text,
+      );
 
-    if (!mounted) {
-      return;
+      if (!mounted) {
+        return;
+      }
+
+      await showVitacareInfoDialog(
+        context,
+        title: 'Paciente cadastrado',
+        message:
+            'Cadastro concluido com sucesso.\nCodigo Firestore: $patientId.\n\nO paciente ja pode receber novos registros e aparecer nas listagens em tempo real.',
+        actionLabel: 'Continuar',
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      _formKey.currentState?.reset();
+      _nameController.clear();
+      _ageController.clear();
+      _conditionController.clear();
+      _caregiverController.clear();
+      _phoneController.clear();
+
+      showVitacareSnackBar(
+        context,
+        'Paciente salvo no Firestore com separacao por usuario.',
+      );
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      showVitacareSnackBar(
+        context,
+        'Nao foi possivel salvar o paciente. Tente novamente.',
+        isError: true,
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
     }
-
-    _formKey.currentState?.reset();
-    _nameController.clear();
-    _ageController.clear();
-    _conditionController.clear();
-    _caregiverController.clear();
-    _phoneController.clear();
-
-    showVitacareSnackBar(
-      context,
-      'Paciente adicionado com sucesso na listagem demonstrativa.',
-    );
   }
 
   @override
@@ -186,7 +210,8 @@ class _PatientRegistrationScreenState extends State<PatientRegistrationScreen> {
                     const SizedBox(height: 18),
                     VitacarePrimaryButton(
                       onPressed: _savePatient,
-                      label: 'Salvar paciente',
+                      label: _isSaving ? 'Salvando...' : 'Salvar paciente',
+                      isLoading: _isSaving,
                     ),
                   ],
                 ),

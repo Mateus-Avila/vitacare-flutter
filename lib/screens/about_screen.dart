@@ -56,13 +56,19 @@ class AboutScreen extends StatelessWidget {
                     _AboutSection(
                       title: 'Funcionalidades demonstradas nesta etapa',
                       content:
-                          'O aplicativo apresenta login, cadastro, recuperacao de senha e tela sobre, alem de cinco modulos especificos: cadastro de paciente, listagem de pacientes, registro de dados de saude, historico de registros com indicadores e alertas/status. Esses modulos demonstram o fluxo principal do VitaCare para documentacao, acompanhamento continuo e coordenacao do cuidado.',
+                          'O aplicativo apresenta login, cadastro, recuperacao de senha e tela sobre, alem de modulos especificos: cadastro de paciente, listagem em tempo real, registro de dados de saude, historico com indicadores, alertas/status, acoes e metas, pesquisa ordenada e consulta CEP por API REST.',
                     ),
                     const SizedBox(height: 18),
                     _AboutSection(
                       title: 'Indicadores clinicos e operacionais',
                       content:
                           'A interface de historico consolida media do periodo, variacao absoluta e percentual, percentual dentro da faixa ideal, taxa de adesao aos registros e tendencia linear simplificada. Com esses indicadores, o projeto classifica o acompanhamento em melhora, estabilidade ou piora.',
+                    ),
+                    const SizedBox(height: 18),
+                    _AboutSection(
+                      title: 'Firebase e API REST',
+                      content:
+                          'A versao atual utiliza Firebase Authentication para acesso, Cloud Firestore para usuarios, pacientes, registros, atividades e metas, sempre filtrando dados por uid. O requisito de API publica e demonstrado pela consulta ViaCEP.',
                     ),
                     const SizedBox(height: 18),
                     _AboutSection(
@@ -85,7 +91,7 @@ class AboutScreen extends StatelessWidget {
                         border: Border.all(color: VitacareColors.border),
                       ),
                       child: const Text(
-                        'Observacao: nesta entrega academica, os dados sao apresentados em ambiente demonstrativo. O objetivo atual e validar interface, navegacao, formularios, listagens e acompanhamento do cuidado conforme os requisitos do projeto.',
+                        'Observacao: nesta entrega academica, o app foi preparado para demonstrar autenticacao, CRUD, tempo real, pesquisa, API REST e futura publicacao no Firebase Hosting.',
                         style: TextStyle(
                           color: VitacareColors.textStrong,
                           fontWeight: FontWeight.w600,

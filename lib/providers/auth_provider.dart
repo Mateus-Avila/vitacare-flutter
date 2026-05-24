@@ -1,31 +1,46 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:vitacare_flutter/core/vitacare_validators.dart';
 import 'package:vitacare_flutter/models/app_user.dart';
 import 'package:vitacare_flutter/models/auth_result.dart';
+import 'package:vitacare_flutter/services/auth_service.dart';
 
 class AuthProvider extends ChangeNotifier {
-  final List<AppUser> _users = const [
-    AppUser(
-      name: 'Equipe Academica VitaCare',
-      email: 'admin@vitacare.com',
-      phone: '(16) 99999-0000',
-      password: '123456',
-    ),
-  ].toList();
-
-  AppUser? _currentUser;
-
-  AppUser? get currentUser => _currentUser;
-
-  bool get isLoggedIn => _currentUser != null;
-
-  bool accountExists(String email) {
-    final normalizedEmail = _normalizeEmail(email);
-    return _users.any((user) => user.email == normalizedEmail);
+  AuthProvider({AuthService? authService})
+    : _authService = authService ?? AuthService() {
+    _authSubscription = _authService.authStateChanges().listen((user) async {
+      if (user == null) {
+        _currentUser = null;
+        notifyListeners();
+        return;
+      }
+      _currentUser = await _authService.loadCurrentUserProfile();
+      notifyListeners();
+    });
   }
 
-  AuthResult login({required String email, required String password}) {
-    final normalizedEmail = _normalizeEmail(email);
+  final AuthService _authService;
+  late final StreamSubscription _authSubscription;
+
+  AppUser? _currentUser;
+  bool _isLoading = false;
+
+  AppUser? get currentUser =>
+      _currentUser ??
+      (_authService.firebaseUser == null
+          ? null
+          : AppUser.fromFirebaseUser(_authService.firebaseUser!));
+
+  bool get isLoggedIn => _authService.firebaseUser != null;
+
+  bool get isLoading => _isLoading;
+
+  Future<AuthResult> login({
+    required String email,
+    required String password,
+  }) async {
+    final normalizedEmail = email.trim().toLowerCase();
     final normalizedPassword = password.trim();
 
     if (normalizedEmail.isEmpty || normalizedPassword.isEmpty) {
@@ -36,44 +51,36 @@ class AuthProvider extends ChangeNotifier {
       return AuthResult.error('Digite um e-mail valido para fazer login.');
     }
 
-    final AppUser? account = _users.cast<AppUser?>().firstWhere(
-      (user) => user?.email == normalizedEmail,
-      orElse: () => null,
-    );
-
-    if (account == null) {
-      return AuthResult.error(
-        'Conta inexistente. Verifique o e-mail ou faca seu cadastro.',
-      );
-    }
-
-    if (account.password != normalizedPassword) {
-      return AuthResult.error('Senha incorreta para este e-mail.');
-    }
-
-    _currentUser = account;
-    notifyListeners();
-    return AuthResult.success(
-      'Login realizado com sucesso. Bem-vindo ao painel academico do VitaCare.',
+    return _runLoading(
+      () => _authService.login(
+        email: normalizedEmail,
+        password: normalizedPassword,
+      ),
     );
   }
 
-  AuthResult register({
+  Future<AuthResult> register({
     required String name,
     required String email,
     required String phone,
+    required String city,
+    required String profile,
     required String password,
     required String confirmPassword,
-  }) {
+  }) async {
     final normalizedName = name.trim();
-    final normalizedEmail = _normalizeEmail(email);
+    final normalizedEmail = email.trim().toLowerCase();
     final normalizedPhone = phone.trim();
+    final normalizedCity = city.trim();
+    final normalizedProfile = profile.trim();
     final normalizedPassword = password.trim();
     final normalizedConfirmPassword = confirmPassword.trim();
 
     if (normalizedName.isEmpty ||
         normalizedEmail.isEmpty ||
         normalizedPhone.isEmpty ||
+        normalizedCity.isEmpty ||
+        normalizedProfile.isEmpty ||
         normalizedPassword.isEmpty ||
         normalizedConfirmPassword.isEmpty) {
       return AuthResult.error('Todos os campos sao obrigatorios.');
@@ -83,57 +90,67 @@ class AuthProvider extends ChangeNotifier {
       return AuthResult.error('Informe um e-mail valido.');
     }
 
+    final passwordError = VitacareValidators.strongPasswordError(
+      normalizedPassword,
+    );
+    if (passwordError != null) {
+      return AuthResult.error(passwordError);
+    }
+
     if (normalizedPassword != normalizedConfirmPassword) {
       return AuthResult.error('Senha e confirmacao precisam ser iguais.');
     }
 
-    if (normalizedPassword.length < 6) {
-      return AuthResult.error('A senha deve ter pelo menos 6 caracteres.');
-    }
-
-    if (accountExists(normalizedEmail)) {
-      return AuthResult.error('Ja existe uma conta com este e-mail.');
-    }
-
-    final AppUser user = AppUser(
-      name: normalizedName,
-      email: normalizedEmail,
-      phone: normalizedPhone,
-      password: normalizedPassword,
-    );
-
-    _users.add(user);
-    _currentUser = user;
-    notifyListeners();
-    return AuthResult.success(
-      'Cadastro realizado com sucesso. Sua conta demonstrativa ja esta ativa.',
+    return _runLoading(
+      () => _authService.register(
+        name: normalizedName,
+        email: normalizedEmail,
+        phone: normalizedPhone,
+        city: normalizedCity,
+        profile: normalizedProfile,
+        password: normalizedPassword,
+      ),
     );
   }
 
-  AuthResult requestPasswordRecovery(String email) {
-    final normalizedEmail = _normalizeEmail(email);
+  Future<AuthResult> requestPasswordRecovery(String email) async {
+    final normalizedEmail = email.trim().toLowerCase();
 
     if (normalizedEmail.isEmpty) {
       return AuthResult.error('Informe seu e-mail para recuperar a senha.');
     }
 
     if (!VitacareValidators.isValidEmail(normalizedEmail)) {
-      return AuthResult.error('Digite um e-mail valido para recuperar a senha.');
+      return AuthResult.error(
+        'Digite um e-mail valido para recuperar a senha.',
+      );
     }
 
-    if (!accountExists(normalizedEmail)) {
-      return AuthResult.error('Nao encontramos conta para este e-mail.');
-    }
-
-    return AuthResult.success(
-      'Simulacao concluida. As instrucoes de redefinicao foram enviadas para o e-mail informado.',
+    return _runLoading(
+      () => _authService.requestPasswordRecovery(normalizedEmail),
     );
   }
 
-  void logout() {
+  Future<void> logout() async {
+    await _authService.logout();
     _currentUser = null;
     notifyListeners();
   }
 
-  String _normalizeEmail(String email) => email.trim().toLowerCase();
+  Future<AuthResult> _runLoading(Future<AuthResult> Function() action) async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      return await action();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  @override
+  void dispose() {
+    _authSubscription.cancel();
+    super.dispose();
+  }
 }

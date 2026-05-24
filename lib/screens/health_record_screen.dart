@@ -36,6 +36,7 @@ class _HealthRecordScreenState extends State<HealthRecordScreen> {
   String _sleepStatus = 'Sono regular';
   String _medicationAdherence = 'Completa';
   String _activityAdherence = 'Realizada';
+  bool _isSaving = false;
 
   @override
   void didChangeDependencies() {
@@ -65,7 +66,7 @@ class _HealthRecordScreenState extends State<HealthRecordScreen> {
     super.dispose();
   }
 
-  Future<void> _saveRecord() async {
+  Future<void> _saveRecord(List<Patient> patients) async {
     FocusScope.of(context).unfocus();
 
     if (_selectedPatientId == null) {
@@ -105,321 +106,374 @@ class _HealthRecordScreenState extends State<HealthRecordScreen> {
       return;
     }
 
-    final HealthRecord record = context.read<PatientProvider>().addHealthRecord(
-      patientId: _selectedPatientId!,
-      systolic: systolic,
-      diastolic: diastolic,
-      glucose: glucose,
-      weight: weight,
-      symptoms: _symptomsController.text,
-      mealStatus: _mealStatus,
-      mobilityStatus: _mobilityStatus,
-      moodStatus: _moodStatus,
-      sleepStatus: _sleepStatus,
-      medicationAdherence: _medicationAdherence,
-      activityAdherence: _activityAdherence,
-      recordedBy: _recordedByController.text,
-      notes: _notesController.text,
+    final Patient selectedPatient = patients.firstWhere(
+      (patient) => patient.id == _selectedPatientId,
     );
 
-    _systolicController.clear();
-    _diastolicController.clear();
-    _glucoseController.clear();
-    _weightController.clear();
-    _symptomsController.clear();
-    _recordedByController.clear();
-    _notesController.clear();
-    setState(() {
-      _mealStatus = 'Alimentacao adequada';
-      _mobilityStatus = 'Locomocao preservada';
-      _moodStatus = 'Bem-humorado';
-      _sleepStatus = 'Sono regular';
-      _medicationAdherence = 'Completa';
-      _activityAdherence = 'Realizada';
-    });
+    setState(() => _isSaving = true);
 
-    if (record.isCritical) {
-      final bool openAlerts = await showVitacareConfirmationDialog(
-        context,
-        title: 'Alerta critico detectado',
-        message:
-            'Os dados registrados indicam risco elevado. Priorize a reavaliacao do paciente e acompanhe o caso na tela de alertas.',
-        confirmLabel: 'Abrir alertas',
-        cancelLabel: 'Fechar',
-      );
-      if (openAlerts && mounted) {
-        Navigator.pushReplacementNamed(context, VitacareRoutes.alerts);
+    try {
+      final HealthRecord record = await context
+          .read<PatientProvider>()
+          .addHealthRecord(
+            patientId: selectedPatient.id,
+            patientName: selectedPatient.name,
+            systolic: systolic,
+            diastolic: diastolic,
+            glucose: glucose,
+            weight: weight,
+            symptoms: _symptomsController.text,
+            mealStatus: _mealStatus,
+            mobilityStatus: _mobilityStatus,
+            moodStatus: _moodStatus,
+            sleepStatus: _sleepStatus,
+            medicationAdherence: _medicationAdherence,
+            activityAdherence: _activityAdherence,
+            recordedBy: _recordedByController.text,
+            notes: _notesController.text,
+          );
+
+      if (!mounted) {
+        return;
       }
-      return;
-    }
 
-    showVitacareSnackBar(
-      context,
-      'Registro salvo com sucesso no historico demonstrativo.',
-    );
+      _systolicController.clear();
+      _diastolicController.clear();
+      _glucoseController.clear();
+      _weightController.clear();
+      _symptomsController.clear();
+      _recordedByController.clear();
+      _notesController.clear();
+      setState(() {
+        _mealStatus = 'Alimentacao adequada';
+        _mobilityStatus = 'Locomocao preservada';
+        _moodStatus = 'Bem-humorado';
+        _sleepStatus = 'Sono regular';
+        _medicationAdherence = 'Completa';
+        _activityAdherence = 'Realizada';
+      });
+
+      if (record.isCritical) {
+        final bool openAlerts = await showVitacareConfirmationDialog(
+          context,
+          title: 'Alerta critico detectado',
+          message:
+              'Os dados registrados indicam risco elevado. Priorize a reavaliacao do paciente e acompanhe o caso na tela de alertas.',
+          confirmLabel: 'Abrir alertas',
+          cancelLabel: 'Fechar',
+        );
+        if (openAlerts && mounted) {
+          Navigator.pushReplacementNamed(context, VitacareRoutes.alerts);
+        }
+        return;
+      }
+
+      if (!mounted) {
+        return;
+      }
+      showVitacareSnackBar(
+        context,
+        'Registro salvo no Firestore e refletido no historico em tempo real.',
+      );
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      showVitacareSnackBar(
+        context,
+        'Nao foi possivel salvar o registro de saude.',
+        isError: true,
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final List<Patient> patients = context.watch<PatientProvider>().patients;
+    final PatientProvider provider = context.read<PatientProvider>();
 
     return VitacarePageScaffold(
       title: 'Registro de Dados de Saude',
       subtitle:
           'Registre sinais clinicos e observacoes da visita para manter o historico do cuidado atualizado.',
       selectedRoute: VitacareRoutes.healthRecord,
-      child: patients.isEmpty
-          ? _buildEmptyState(context)
-          : SingleChildScrollView(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 760),
-                child: VitacareGlassCard(
-                  child: Padding(
-                    padding: const EdgeInsets.all(22),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const SizedBox(height: 4),
-                          DropdownButtonFormField<String>(
-                            key: ValueKey<String?>(_selectedPatientId),
-                            initialValue: _selectedPatientId,
-                            isExpanded: true,
-                            decoration: vitacareInputDecoration(
-                              label: 'Paciente',
-                              hint: 'Selecione um paciente',
-                              icon: Icons.person_outline_rounded,
-                            ),
-                            items: patients
-                                .map(
-                                  (patient) => DropdownMenuItem<String>(
-                                    value: patient.id,
-                                    child: Text(
-                                      '${patient.name} (${patient.id})',
-                                      overflow: TextOverflow.ellipsis,
-                                      maxLines: 1,
+      child: StreamBuilder<List<Patient>>(
+        stream: provider.watchPatients(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return _buildErrorState(context);
+          }
+
+          final List<Patient> patients = snapshot.data ?? <Patient>[];
+          if (_selectedPatientId != null &&
+              !patients.any((patient) => patient.id == _selectedPatientId)) {
+            _selectedPatientId = null;
+          }
+
+          return patients.isEmpty
+              ? _buildEmptyState(context)
+              : SingleChildScrollView(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 760),
+                    child: VitacareGlassCard(
+                      child: Padding(
+                        padding: const EdgeInsets.all(22),
+                        child: Form(
+                          key: _formKey,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SizedBox(height: 4),
+                              DropdownButtonFormField<String>(
+                                key: ValueKey<String?>(_selectedPatientId),
+                                initialValue: _selectedPatientId,
+                                isExpanded: true,
+                                decoration: vitacareInputDecoration(
+                                  label: 'Paciente',
+                                  hint: 'Selecione um paciente',
+                                  icon: Icons.person_outline_rounded,
+                                ),
+                                items: patients
+                                    .map(
+                                      (patient) => DropdownMenuItem<String>(
+                                        value: patient.id,
+                                        child: Text(
+                                          '${patient.name} (${patient.id})',
+                                          overflow: TextOverflow.ellipsis,
+                                          maxLines: 1,
+                                        ),
+                                      ),
+                                    )
+                                    .toList(),
+                                onChanged: (value) {
+                                  setState(() => _selectedPatientId = value);
+                                },
+                              ),
+                              const SizedBox(height: 12),
+                              TextFormField(
+                                controller: _systolicController,
+                                keyboardType: TextInputType.number,
+                                decoration: vitacareInputDecoration(
+                                  label: 'Pressao sistolica (mmHg)',
+                                  hint: 'Ex: 130',
+                                  icon: Icons.favorite_border_rounded,
+                                ),
+                                validator: (value) {
+                                  if ((value ?? '').trim().isEmpty) {
+                                    return 'Informe a pressao sistolica.';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              const SizedBox(height: 12),
+                              TextFormField(
+                                controller: _diastolicController,
+                                keyboardType: TextInputType.number,
+                                decoration: vitacareInputDecoration(
+                                  label: 'Pressao diastolica (mmHg)',
+                                  hint: 'Ex: 85',
+                                  icon: Icons.favorite_outline_rounded,
+                                ),
+                                validator: (value) {
+                                  if ((value ?? '').trim().isEmpty) {
+                                    return 'Informe a pressao diastolica.';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              const SizedBox(height: 12),
+                              TextFormField(
+                                controller: _glucoseController,
+                                keyboardType: TextInputType.number,
+                                decoration: vitacareInputDecoration(
+                                  label: 'Glicemia (mg/dL)',
+                                  hint: 'Ex: 118',
+                                  icon: Icons.water_drop_outlined,
+                                ),
+                                validator: (value) {
+                                  if ((value ?? '').trim().isEmpty) {
+                                    return 'Informe o valor da glicemia.';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              const SizedBox(height: 12),
+                              TextFormField(
+                                controller: _weightController,
+                                keyboardType:
+                                    const TextInputType.numberWithOptions(
+                                      decimal: true,
                                     ),
-                                  ),
-                                )
-                                .toList(),
-                            onChanged: (value) {
-                              setState(() => _selectedPatientId = value);
-                            },
-                          ),
-                          const SizedBox(height: 12),
-                          TextFormField(
-                            controller: _systolicController,
-                            keyboardType: TextInputType.number,
-                            decoration: vitacareInputDecoration(
-                              label: 'Pressao sistolica (mmHg)',
-                              hint: 'Ex: 130',
-                              icon: Icons.favorite_border_rounded,
-                            ),
-                            validator: (value) {
-                              if ((value ?? '').trim().isEmpty) {
-                                return 'Informe a pressao sistolica.';
-                              }
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 12),
-                          TextFormField(
-                            controller: _diastolicController,
-                            keyboardType: TextInputType.number,
-                            decoration: vitacareInputDecoration(
-                              label: 'Pressao diastolica (mmHg)',
-                              hint: 'Ex: 85',
-                              icon: Icons.favorite_outline_rounded,
-                            ),
-                            validator: (value) {
-                              if ((value ?? '').trim().isEmpty) {
-                                return 'Informe a pressao diastolica.';
-                              }
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 12),
-                          TextFormField(
-                            controller: _glucoseController,
-                            keyboardType: TextInputType.number,
-                            decoration: vitacareInputDecoration(
-                              label: 'Glicemia (mg/dL)',
-                              hint: 'Ex: 118',
-                              icon: Icons.water_drop_outlined,
-                            ),
-                            validator: (value) {
-                              if ((value ?? '').trim().isEmpty) {
-                                return 'Informe o valor da glicemia.';
-                              }
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 12),
-                          TextFormField(
-                            controller: _weightController,
-                            keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true,
-                            ),
-                            decoration: vitacareInputDecoration(
-                              label: 'Peso (kg)',
-                              hint: 'Ex: 68,4',
-                              icon: Icons.monitor_weight_outlined,
-                            ),
-                            validator: (value) {
-                              if ((value ?? '').trim().isEmpty) {
-                                return 'Informe o peso atual.';
-                              }
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 12),
-                          TextFormField(
-                            controller: _symptomsController,
-                            minLines: 2,
-                            maxLines: 3,
-                            decoration: vitacareInputDecoration(
-                              label: 'Sintomas observados',
-                              hint:
-                                  'Ex: cansaco, tontura, sem queixas relevantes',
-                              icon: Icons.sick_outlined,
-                            ),
-                            validator: (value) {
-                              if ((value ?? '').trim().isEmpty) {
-                                return 'Descreva os sintomas ou indique ausencia.';
-                              }
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 12),
-                          _StatusDropdown(
-                            label: 'Alimentacao',
-                            icon: Icons.restaurant_outlined,
-                            value: _mealStatus,
-                            options: const [
-                              'Alimentacao adequada',
-                              'Alimentacao parcial',
-                              'Baixa ingestao alimentar',
+                                decoration: vitacareInputDecoration(
+                                  label: 'Peso (kg)',
+                                  hint: 'Ex: 68,4',
+                                  icon: Icons.monitor_weight_outlined,
+                                ),
+                                validator: (value) {
+                                  if ((value ?? '').trim().isEmpty) {
+                                    return 'Informe o peso atual.';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              const SizedBox(height: 12),
+                              TextFormField(
+                                controller: _symptomsController,
+                                minLines: 2,
+                                maxLines: 3,
+                                decoration: vitacareInputDecoration(
+                                  label: 'Sintomas observados',
+                                  hint:
+                                      'Ex: cansaco, tontura, sem queixas relevantes',
+                                  icon: Icons.sick_outlined,
+                                ),
+                                validator: (value) {
+                                  if ((value ?? '').trim().isEmpty) {
+                                    return 'Descreva os sintomas ou indique ausencia.';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              const SizedBox(height: 12),
+                              _StatusDropdown(
+                                label: 'Alimentacao',
+                                icon: Icons.restaurant_outlined,
+                                value: _mealStatus,
+                                options: const [
+                                  'Alimentacao adequada',
+                                  'Alimentacao parcial',
+                                  'Baixa ingestao alimentar',
+                                ],
+                                onChanged: (value) {
+                                  setState(() => _mealStatus = value!);
+                                },
+                              ),
+                              const SizedBox(height: 12),
+                              _StatusDropdown(
+                                label: 'Locomocao',
+                                icon: Icons.accessible_forward_rounded,
+                                value: _mobilityStatus,
+                                options: const [
+                                  'Locomocao preservada',
+                                  'Caminhou com apoio leve',
+                                  'Necessita apoio frequente',
+                                ],
+                                onChanged: (value) {
+                                  setState(() => _mobilityStatus = value!);
+                                },
+                              ),
+                              const SizedBox(height: 12),
+                              _StatusDropdown(
+                                label: 'Humor',
+                                icon: Icons.mood_outlined,
+                                value: _moodStatus,
+                                options: const [
+                                  'Bem-humorado',
+                                  'Atencao moderada',
+                                  'Apatica',
+                                ],
+                                onChanged: (value) {
+                                  setState(() => _moodStatus = value!);
+                                },
+                              ),
+                              const SizedBox(height: 12),
+                              _StatusDropdown(
+                                label: 'Sono',
+                                icon: Icons.bedtime_outlined,
+                                value: _sleepStatus,
+                                options: const [
+                                  'Sono regular',
+                                  'Sono irregular',
+                                  'Sono ruim',
+                                ],
+                                onChanged: (value) {
+                                  setState(() => _sleepStatus = value!);
+                                },
+                              ),
+                              const SizedBox(height: 12),
+                              _StatusDropdown(
+                                label: 'Adesao medicamentosa',
+                                icon: Icons.medication_outlined,
+                                value: _medicationAdherence,
+                                options: const [
+                                  'Completa',
+                                  'Parcial',
+                                  'Nao realizada',
+                                ],
+                                onChanged: (value) {
+                                  setState(() => _medicationAdherence = value!);
+                                },
+                              ),
+                              const SizedBox(height: 12),
+                              _StatusDropdown(
+                                label: 'Atividades planejadas',
+                                icon: Icons.checklist_rounded,
+                                value: _activityAdherence,
+                                options: const [
+                                  'Realizada',
+                                  'Parcial',
+                                  'Nao realizada',
+                                ],
+                                onChanged: (value) {
+                                  setState(() => _activityAdherence = value!);
+                                },
+                              ),
+                              const SizedBox(height: 12),
+                              TextFormField(
+                                controller: _recordedByController,
+                                decoration: vitacareInputDecoration(
+                                  label: 'Registrado por',
+                                  hint: 'Ex: Cuidadora Ana ou Enfermeiro Lucas',
+                                  icon: Icons.badge_outlined,
+                                ),
+                                validator: (value) {
+                                  if ((value ?? '').trim().isEmpty) {
+                                    return 'Informe quem realizou o registro.';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              const SizedBox(height: 12),
+                              TextFormField(
+                                controller: _notesController,
+                                minLines: 3,
+                                maxLines: 5,
+                                decoration: vitacareInputDecoration(
+                                  label: 'Observacoes',
+                                  hint:
+                                      'Descreva sintomas, adesao, humor ou orientacoes da visita.',
+                                  icon: Icons.note_alt_outlined,
+                                ),
+                                validator: (value) {
+                                  if ((value ?? '').trim().isEmpty) {
+                                    return 'Registre uma observacao clinica.';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              const SizedBox(height: 18),
+                              VitacarePrimaryButton(
+                                onPressed: () => _saveRecord(patients),
+                                label: _isSaving
+                                    ? 'Salvando...'
+                                    : 'Salvar registro',
+                                isLoading: _isSaving,
+                              ),
                             ],
-                            onChanged: (value) {
-                              setState(() => _mealStatus = value!);
-                            },
                           ),
-                          const SizedBox(height: 12),
-                          _StatusDropdown(
-                            label: 'Locomocao',
-                            icon: Icons.accessible_forward_rounded,
-                            value: _mobilityStatus,
-                            options: const [
-                              'Locomocao preservada',
-                              'Caminhou com apoio leve',
-                              'Necessita apoio frequente',
-                            ],
-                            onChanged: (value) {
-                              setState(() => _mobilityStatus = value!);
-                            },
-                          ),
-                          const SizedBox(height: 12),
-                          _StatusDropdown(
-                            label: 'Humor',
-                            icon: Icons.mood_outlined,
-                            value: _moodStatus,
-                            options: const [
-                              'Bem-humorado',
-                              'Atencao moderada',
-                              'Apatica',
-                            ],
-                            onChanged: (value) {
-                              setState(() => _moodStatus = value!);
-                            },
-                          ),
-                          const SizedBox(height: 12),
-                          _StatusDropdown(
-                            label: 'Sono',
-                            icon: Icons.bedtime_outlined,
-                            value: _sleepStatus,
-                            options: const [
-                              'Sono regular',
-                              'Sono irregular',
-                              'Sono ruim',
-                            ],
-                            onChanged: (value) {
-                              setState(() => _sleepStatus = value!);
-                            },
-                          ),
-                          const SizedBox(height: 12),
-                          _StatusDropdown(
-                            label: 'Adesao medicamentosa',
-                            icon: Icons.medication_outlined,
-                            value: _medicationAdherence,
-                            options: const [
-                              'Completa',
-                              'Parcial',
-                              'Nao realizada',
-                            ],
-                            onChanged: (value) {
-                              setState(() => _medicationAdherence = value!);
-                            },
-                          ),
-                          const SizedBox(height: 12),
-                          _StatusDropdown(
-                            label: 'Atividades planejadas',
-                            icon: Icons.checklist_rounded,
-                            value: _activityAdherence,
-                            options: const [
-                              'Realizada',
-                              'Parcial',
-                              'Nao realizada',
-                            ],
-                            onChanged: (value) {
-                              setState(() => _activityAdherence = value!);
-                            },
-                          ),
-                          const SizedBox(height: 12),
-                          TextFormField(
-                            controller: _recordedByController,
-                            decoration: vitacareInputDecoration(
-                              label: 'Registrado por',
-                              hint: 'Ex: Cuidadora Ana ou Enfermeiro Lucas',
-                              icon: Icons.badge_outlined,
-                            ),
-                            validator: (value) {
-                              if ((value ?? '').trim().isEmpty) {
-                                return 'Informe quem realizou o registro.';
-                              }
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 12),
-                          TextFormField(
-                            controller: _notesController,
-                            minLines: 3,
-                            maxLines: 5,
-                            decoration: vitacareInputDecoration(
-                              label: 'Observacoes',
-                              hint:
-                                  'Descreva sintomas, adesao, humor ou orientacoes da visita.',
-                              icon: Icons.note_alt_outlined,
-                            ),
-                            validator: (value) {
-                              if ((value ?? '').trim().isEmpty) {
-                                return 'Registre uma observacao clinica.';
-                              }
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 18),
-                          VitacarePrimaryButton(
-                            onPressed: _saveRecord,
-                            label: 'Salvar registro',
-                          ),
-                        ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ),
-            ),
+                );
+        },
+      ),
     );
   }
 
@@ -462,6 +516,18 @@ class _HealthRecordScreenState extends State<HealthRecordScreen> {
       ),
     );
   }
+
+  Widget _buildErrorState(BuildContext context) {
+    return Center(
+      child: Text(
+        'Erro ao carregar pacientes do Firestore.',
+        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+          color: Colors.red.shade700,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
 }
 
 class _StatusDropdown extends StatelessWidget {
@@ -493,11 +559,7 @@ class _StatusDropdown extends StatelessWidget {
           .map(
             (option) => DropdownMenuItem<String>(
               value: option,
-              child: Text(
-                option,
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
-              ),
+              child: Text(option, overflow: TextOverflow.ellipsis, maxLines: 1),
             ),
           )
           .toList(),

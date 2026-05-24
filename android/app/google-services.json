@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "509258776571",
+    "project_id": "mobile-2-6df82",
+    "storage_bucket": "mobile-2-6df82.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:509258776571:android:af753f27116710aaaad55e",
+        "android_client_info": {
+          "package_name": "com.example.vitacare_flutter"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAgSqcbMzRU8JOolyyboNB7bUxVIVktmvc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

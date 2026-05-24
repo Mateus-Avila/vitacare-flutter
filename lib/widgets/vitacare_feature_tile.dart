@@ -35,7 +35,7 @@ class VitacareFeatureTile extends StatelessWidget {
         ),
       ),
       child: Padding(
-      padding: const EdgeInsets.all(18),
+        padding: const EdgeInsets.all(18),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

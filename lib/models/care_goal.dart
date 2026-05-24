@@ -1,0 +1,80 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:vitacare_flutter/core/firestore_serialization.dart';
+
+class CareGoal {
+  const CareGoal({
+    required this.id,
+    required this.uid,
+    required this.patientId,
+    required this.patientName,
+    required this.title,
+    required this.description,
+    required this.progress,
+    required this.startDate,
+    required this.endDate,
+    required this.status,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  final String id;
+  final String uid;
+  final String patientId;
+  final String patientName;
+  final String title;
+  final String description;
+  final int progress;
+  final DateTime startDate;
+  final DateTime endDate;
+  final String status;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+
+  factory CareGoal.fromFirestore(
+    DocumentSnapshot<Map<String, dynamic>> snapshot,
+  ) {
+    final data = snapshot.data() ?? <String, dynamic>{};
+    return CareGoal(
+      id: snapshot.id,
+      uid: data['uid'] as String? ?? '',
+      patientId: data['pacienteId'] as String? ?? '',
+      patientName: data['pacienteNome'] as String? ?? '',
+      title: data['titulo'] as String? ?? '',
+      description: data['descricao'] as String? ?? '',
+      progress: firestoreInt(data['progresso']),
+      startDate: firestoreDate(data['dataInicio']),
+      endDate: firestoreDate(data['dataFim']),
+      status: data['status'] as String? ?? 'Em andamento',
+      createdAt: firestoreDate(data['criadoEm']),
+      updatedAt: firestoreDate(data['atualizadoEm']),
+    );
+  }
+
+  static Map<String, dynamic> toFirestoreMap({
+    required String uid,
+    required String patientId,
+    required String patientName,
+    required String title,
+    required String description,
+    required int progress,
+    required DateTime startDate,
+    required DateTime endDate,
+    required String status,
+    bool isCreate = true,
+  }) {
+    return {
+      'uid': uid,
+      'pacienteId': patientId,
+      'pacienteNome': patientName,
+      'titulo': title.trim(),
+      'tituloLowercase': normalizedSearchText(title),
+      'descricao': description.trim(),
+      'progresso': progress.clamp(0, 100),
+      'dataInicio': Timestamp.fromDate(startDate),
+      'dataFim': Timestamp.fromDate(endDate),
+      'status': status,
+      if (isCreate) 'criadoEm': FieldValue.serverTimestamp(),
+      'atualizadoEm': FieldValue.serverTimestamp(),
+    };
+  }
+}

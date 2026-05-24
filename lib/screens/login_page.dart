@@ -41,15 +41,13 @@ class _LoginPageState extends State<LoginPage>
       parent: _animationController,
       curve: Curves.easeOutCubic,
     );
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.08),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: Curves.easeOutCubic,
-      ),
-    );
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.08), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _animationController,
+            curve: Curves.easeOutCubic,
+          ),
+        );
   }
 
   @override
@@ -60,7 +58,7 @@ class _LoginPageState extends State<LoginPage>
     super.dispose();
   }
 
-  void _handleLogin() {
+  Future<void> _handleLogin() async {
     FocusScope.of(context).unfocus();
 
     if (!(_formKey.currentState?.validate() ?? false)) {
@@ -72,10 +70,14 @@ class _LoginPageState extends State<LoginPage>
       return;
     }
 
-    final result = context.read<AuthProvider>().login(
-          email: _emailController.text,
-          password: _passwordController.text,
-        );
+    final result = await context.read<AuthProvider>().login(
+      email: _emailController.text,
+      password: _passwordController.text,
+    );
+
+    if (!mounted) {
+      return;
+    }
 
     if (!result.isSuccess) {
       showVitacareSnackBar(context, result.message, isError: true);
@@ -115,13 +117,13 @@ class _LoginPageState extends State<LoginPage>
                       child: ConstrainedBox(
                         constraints: BoxConstraints(maxWidth: contentWidth),
                         child: VitacareGlassCard(
-                              child: isWide
-                                  ? Row(
-                                      children: [
-                                        Expanded(child: _buildBrandPanel(theme)),
-                                        Expanded(child: _buildFormPanel(theme)),
-                                      ],
-                                    )
+                          child: isWide
+                              ? Row(
+                                  children: [
+                                    Expanded(child: _buildBrandPanel(theme)),
+                                    Expanded(child: _buildFormPanel(theme)),
+                                  ],
+                                )
                               : _buildFormPanel(theme),
                         ),
                       ),
@@ -177,6 +179,8 @@ class _LoginPageState extends State<LoginPage>
   }
 
   Widget _buildFormPanel(ThemeData theme) {
+    final bool isLoading = context.watch<AuthProvider>().isLoading;
+
     return Padding(
       padding: const EdgeInsets.all(24),
       child: Form(
@@ -231,30 +235,33 @@ class _LoginPageState extends State<LoginPage>
               obscureText: _obscurePassword,
               textInputAction: TextInputAction.done,
               onFieldSubmitted: (_) => _handleLogin(),
-              decoration: _fieldDecoration(
-                label: 'Senha',
-                hint: 'Digite sua senha',
-                icon: Icons.lock_outline_rounded,
-              ).copyWith(
-                suffixIcon: IconButton(
-                  tooltip: _obscurePassword ? 'Mostrar senha' : 'Ocultar senha',
-                  onPressed: () {
-                    setState(() {
-                      _obscurePassword = !_obscurePassword;
-                    });
-                  },
-                  icon: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 180),
-                    child: Icon(
-                      _obscurePassword
-                          ? Icons.visibility_outlined
-                          : Icons.visibility_off_outlined,
-                      key: ValueKey(_obscurePassword),
-                      color: VitacareColors.textMuted,
+              decoration:
+                  _fieldDecoration(
+                    label: 'Senha',
+                    hint: 'Digite sua senha',
+                    icon: Icons.lock_outline_rounded,
+                  ).copyWith(
+                    suffixIcon: IconButton(
+                      tooltip: _obscurePassword
+                          ? 'Mostrar senha'
+                          : 'Ocultar senha',
+                      onPressed: () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
+                      },
+                      icon: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 180),
+                        child: Icon(
+                          _obscurePassword
+                              ? Icons.visibility_outlined
+                              : Icons.visibility_off_outlined,
+                          key: ValueKey(_obscurePassword),
+                          color: VitacareColors.textMuted,
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ),
               validator: (value) {
                 if ((value ?? '').trim().isEmpty) {
                   return 'Informe sua senha.';
@@ -275,7 +282,8 @@ class _LoginPageState extends State<LoginPage>
             const SizedBox(height: 12),
             VitacarePrimaryButton(
               onPressed: _handleLogin,
-              label: 'Entrar',
+              label: isLoading ? 'Entrando...' : 'Entrar',
+              isLoading: isLoading,
             ),
             const SizedBox(height: 18),
             Row(
