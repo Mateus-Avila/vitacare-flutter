@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
+import 'package:vitacare_flutter/core/firestore_serialization.dart';
 import 'package:vitacare_flutter/models/care_goal.dart';
 import 'package:vitacare_flutter/models/care_task.dart';
 import 'package:vitacare_flutter/models/health_record.dart';
@@ -80,7 +81,24 @@ class FirestoreService {
         });
   }
 
-  Stream<List<Patient>> searchPatients() => watchPatients();
+  Stream<List<Patient>> searchPatients(String query) {
+    final normalizedQuery = query.trim().toLowerCase();
+    final collection = _firestore
+        .collection(patientsCollection)
+        .where('uid', isEqualTo: currentUid);
+
+    final stream = normalizedQuery.isEmpty
+        ? collection.snapshots()
+        : collection
+              .where('termosBusca', arrayContains: normalizedQuery)
+              .snapshots();
+
+    return stream.map((snapshot) {
+      final patients = snapshot.docs.map(Patient.fromFirestore).toList()
+        ..sort((a, b) => a.name.compareTo(b.name));
+      return patients;
+    });
+  }
 
   Future<String> addPatient({
     required String name,
@@ -88,6 +106,10 @@ class FirestoreService {
     required String chronicCondition,
     required String caregiver,
     required String phone,
+    required String cep,
+    required String city,
+    required String state,
+    required String street,
   }) async {
     final uid = currentUid;
     final reference = await _firestore
@@ -101,6 +123,10 @@ class FirestoreService {
             chronicCondition: chronicCondition.trim(),
             caregiver: caregiver.trim(),
             phone: phone.trim(),
+            cep: cep.trim(),
+            city: city.trim(),
+            state: state.trim(),
+            street: street.trim(),
             createdAt: DateTime.now(),
             updatedAt: DateTime.now(),
             status: 'atencao',
@@ -116,6 +142,10 @@ class FirestoreService {
     required String chronicCondition,
     required String caregiver,
     required String phone,
+    required String cep,
+    required String city,
+    required String state,
+    required String street,
   }) async {
     await _ensureOwnedDocument(patientsCollection, patient.id);
     await _firestore
@@ -128,6 +158,10 @@ class FirestoreService {
             chronicCondition: chronicCondition,
             caregiver: caregiver,
             phone: phone,
+            cep: cep,
+            city: city,
+            state: state,
+            street: street,
           ),
         );
   }
@@ -350,6 +384,15 @@ class FirestoreService {
         'condicaoCronica': 'Diabetes tipo 2',
         'cuidador': 'Ana Souza',
         'telefone': '(16) 99123-4567',
+        'cep': '14010-000',
+        'cidade': 'Ribeirao Preto',
+        'estado': 'SP',
+        'logradouro': 'Rua Cerqueira Cesar',
+        'termosBusca': normalizedSearchTokens([
+          'Maria da Silva',
+          'Diabetes tipo 2',
+          'Ana Souza',
+        ]),
         'status': 'atencao',
         'criadoEm': Timestamp.fromDate(now.subtract(const Duration(days: 30))),
         'atualizadoEm': Timestamp.fromDate(now),
@@ -366,6 +409,15 @@ class FirestoreService {
         'condicaoCronica': 'Hipertensão arterial',
         'cuidador': 'Carlos Ferreira',
         'telefone': '(16) 98765-4321',
+        'cep': '14020-260',
+        'cidade': 'Ribeirao Preto',
+        'estado': 'SP',
+        'logradouro': 'Avenida Presidente Vargas',
+        'termosBusca': normalizedSearchTokens([
+          'João Ferreira',
+          'Hipertensão arterial',
+          'Carlos Ferreira',
+        ]),
         'status': 'critico',
         'criadoEm': Timestamp.fromDate(now.subtract(const Duration(days: 45))),
         'atualizadoEm': Timestamp.fromDate(now),
@@ -382,6 +434,15 @@ class FirestoreService {
         'condicaoCronica': 'Insuficiência cardíaca',
         'cuidador': 'Pedro Oliveira',
         'telefone': '(16) 97654-3210',
+        'cep': '14025-000',
+        'cidade': 'Ribeirao Preto',
+        'estado': 'SP',
+        'logradouro': 'Avenida Nove de Julho',
+        'termosBusca': normalizedSearchTokens([
+          'Ana Oliveira',
+          'Insuficiência cardíaca',
+          'Pedro Oliveira',
+        ]),
         'status': 'estavel',
         'criadoEm': Timestamp.fromDate(now.subtract(const Duration(days: 20))),
         'atualizadoEm': Timestamp.fromDate(now),
@@ -398,6 +459,15 @@ class FirestoreService {
         'condicaoCronica': 'DPOC',
         'cuidador': 'Lucia Santos',
         'telefone': '(16) 96543-2109',
+        'cep': '14096-000',
+        'cidade': 'Ribeirao Preto',
+        'estado': 'SP',
+        'logradouro': 'Avenida Costabile Romano',
+        'termosBusca': normalizedSearchTokens([
+          'Carlos Santos',
+          'DPOC',
+          'Lucia Santos',
+        ]),
         'status': 'atencao',
         'criadoEm': Timestamp.fromDate(now.subtract(const Duration(days: 15))),
         'atualizadoEm': Timestamp.fromDate(now),

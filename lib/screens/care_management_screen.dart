@@ -364,16 +364,14 @@ class _TaskDialog {
     required List<Patient> patients,
     CareTask? task,
   }) async {
+    final scaffoldContext = context;
+    final patientProvider = scaffoldContext.read<PatientProvider>();
     final formKey = GlobalKey<FormState>();
     String patientId = task?.patientId ?? patients.first.id;
-    final titleController = TextEditingController(text: task?.title ?? '');
-    final descriptionController = TextEditingController(
-      text: task?.description ?? '',
-    );
-    final dateController = TextEditingController(
-      text: _dateInput(
-        task?.dueDate ?? DateTime.now().add(const Duration(days: 1)),
-      ),
+    String title = task?.title ?? '';
+    String description = task?.description ?? '';
+    String dueDateText = _dateInput(
+      task?.dueDate ?? DateTime.now().add(const Duration(days: 1)),
     );
     String priority = task?.priority ?? 'Media';
     String status = task?.status ?? 'Pendente';
@@ -386,11 +384,13 @@ class _TaskDialog {
         return StatefulBuilder(
           builder: (context, setState) {
             Future<void> save() async {
+              FocusManager.instance.primaryFocus?.unfocus();
+
               if (!(formKey.currentState?.validate() ?? false)) {
                 return;
               }
 
-              final dueDate = _parseDate(dateController.text);
+              final dueDate = _parseDate(dueDateText);
               if (dueDate == null) {
                 showVitacareSnackBar(
                   context,
@@ -406,21 +406,21 @@ class _TaskDialog {
               setState(() => isSaving = true);
               try {
                 if (task == null) {
-                  await context.read<PatientProvider>().addCareTask(
+                  await patientProvider.addCareTask(
                     patientId: patient.id,
                     patientName: patient.name,
-                    title: titleController.text,
-                    description: descriptionController.text,
+                    title: title,
+                    description: description,
                     priority: priority,
                     status: status,
                     dueDate: dueDate,
                     completed: completed,
                   );
                 } else {
-                  await context.read<PatientProvider>().updateCareTask(
+                  await patientProvider.updateCareTask(
                     task: task,
-                    title: titleController.text,
-                    description: descriptionController.text,
+                    title: title,
+                    description: description,
                     priority: priority,
                     status: status,
                     dueDate: dueDate,
@@ -428,17 +428,20 @@ class _TaskDialog {
                   );
                 }
 
-                if (context.mounted) {
+                if (dialogContext.mounted) {
+                  setState(() => isSaving = false);
                   Navigator.pop(dialogContext);
+                }
+                if (scaffoldContext.mounted) {
                   showVitacareSnackBar(
-                    context,
+                    scaffoldContext,
                     task == null
                         ? 'Atividade salva no Firestore.'
                         : 'Atividade atualizada no Firestore.',
                   );
                 }
               } catch (_) {
-                if (context.mounted) {
+                if (dialogContext.mounted) {
                   showVitacareSnackBar(
                     context,
                     'Nao foi possivel salvar a atividade.',
@@ -446,7 +449,9 @@ class _TaskDialog {
                   );
                 }
               } finally {
-                setState(() => isSaving = false);
+                if (isSaving && dialogContext.mounted) {
+                  setState(() => isSaving = false);
+                }
               }
             }
 
@@ -469,18 +474,20 @@ class _TaskDialog {
                         ),
                         const SizedBox(height: 10),
                         _requiredField(
-                          controller: titleController,
+                          initialValue: title,
                           label: 'Titulo',
                           hint: 'Ex: Conferir medicacao',
                           icon: Icons.task_alt_rounded,
+                          onChanged: (value) => title = value,
                         ),
                         const SizedBox(height: 10),
                         _requiredField(
-                          controller: descriptionController,
+                          initialValue: description,
                           label: 'Descricao',
                           hint: 'Detalhe a acao de cuidado',
                           icon: Icons.notes_outlined,
                           minLines: 2,
+                          onChanged: (value) => description = value,
                         ),
                         const SizedBox(height: 10),
                         Row(
@@ -514,10 +521,11 @@ class _TaskDialog {
                         ),
                         const SizedBox(height: 10),
                         _requiredField(
-                          controller: dateController,
+                          initialValue: dueDateText,
                           label: 'Data limite',
                           hint: 'AAAA-MM-DD',
                           icon: Icons.event_outlined,
+                          onChanged: (value) => dueDateText = value,
                         ),
                         CheckboxListTile(
                           contentPadding: EdgeInsets.zero,
@@ -554,10 +562,6 @@ class _TaskDialog {
         );
       },
     );
-
-    titleController.dispose();
-    descriptionController.dispose();
-    dateController.dispose();
   }
 }
 
@@ -567,22 +571,16 @@ class _GoalDialog {
     required List<Patient> patients,
     CareGoal? goal,
   }) async {
+    final scaffoldContext = context;
+    final patientProvider = scaffoldContext.read<PatientProvider>();
     final formKey = GlobalKey<FormState>();
     String patientId = goal?.patientId ?? patients.first.id;
-    final titleController = TextEditingController(text: goal?.title ?? '');
-    final descriptionController = TextEditingController(
-      text: goal?.description ?? '',
-    );
-    final progressController = TextEditingController(
-      text: (goal?.progress ?? 0).toString(),
-    );
-    final startDateController = TextEditingController(
-      text: _dateInput(goal?.startDate ?? DateTime.now()),
-    );
-    final endDateController = TextEditingController(
-      text: _dateInput(
-        goal?.endDate ?? DateTime.now().add(const Duration(days: 30)),
-      ),
+    String title = goal?.title ?? '';
+    String description = goal?.description ?? '';
+    String progressText = (goal?.progress ?? 0).toString();
+    String startDateText = _dateInput(goal?.startDate ?? DateTime.now());
+    String endDateText = _dateInput(
+      goal?.endDate ?? DateTime.now().add(const Duration(days: 30)),
     );
     String status = goal?.status ?? 'Em andamento';
     bool isSaving = false;
@@ -593,13 +591,15 @@ class _GoalDialog {
         return StatefulBuilder(
           builder: (context, setState) {
             Future<void> save() async {
+              FocusManager.instance.primaryFocus?.unfocus();
+
               if (!(formKey.currentState?.validate() ?? false)) {
                 return;
               }
 
-              final progress = int.tryParse(progressController.text.trim());
-              final startDate = _parseDate(startDateController.text);
-              final endDate = _parseDate(endDateController.text);
+              final progress = int.tryParse(progressText.trim());
+              final startDate = _parseDate(startDateText);
+              final endDate = _parseDate(endDateText);
               if (progress == null ||
                   progress < 0 ||
                   progress > 100 ||
@@ -619,21 +619,21 @@ class _GoalDialog {
               setState(() => isSaving = true);
               try {
                 if (goal == null) {
-                  await context.read<PatientProvider>().addCareGoal(
+                  await patientProvider.addCareGoal(
                     patientId: patient.id,
                     patientName: patient.name,
-                    title: titleController.text,
-                    description: descriptionController.text,
+                    title: title,
+                    description: description,
                     progress: progress,
                     startDate: startDate,
                     endDate: endDate,
                     status: status,
                   );
                 } else {
-                  await context.read<PatientProvider>().updateCareGoal(
+                  await patientProvider.updateCareGoal(
                     goal: goal,
-                    title: titleController.text,
-                    description: descriptionController.text,
+                    title: title,
+                    description: description,
                     progress: progress,
                     startDate: startDate,
                     endDate: endDate,
@@ -641,17 +641,20 @@ class _GoalDialog {
                   );
                 }
 
-                if (context.mounted) {
+                if (dialogContext.mounted) {
+                  setState(() => isSaving = false);
                   Navigator.pop(dialogContext);
+                }
+                if (scaffoldContext.mounted) {
                   showVitacareSnackBar(
-                    context,
+                    scaffoldContext,
                     goal == null
                         ? 'Meta salva no Firestore.'
                         : 'Meta atualizada no Firestore.',
                   );
                 }
               } catch (_) {
-                if (context.mounted) {
+                if (dialogContext.mounted) {
                   showVitacareSnackBar(
                     context,
                     'Nao foi possivel salvar a meta.',
@@ -659,7 +662,9 @@ class _GoalDialog {
                   );
                 }
               } finally {
-                setState(() => isSaving = false);
+                if (isSaving && dialogContext.mounted) {
+                  setState(() => isSaving = false);
+                }
               }
             }
 
@@ -682,29 +687,32 @@ class _GoalDialog {
                         ),
                         const SizedBox(height: 10),
                         _requiredField(
-                          controller: titleController,
+                          initialValue: title,
                           label: 'Titulo',
                           hint: 'Ex: Aumentar adesao alimentar',
                           icon: Icons.flag_outlined,
+                          onChanged: (value) => title = value,
                         ),
                         const SizedBox(height: 10),
                         _requiredField(
-                          controller: descriptionController,
+                          initialValue: description,
                           label: 'Descricao',
                           hint: 'Detalhe a meta de cuidado',
                           icon: Icons.notes_outlined,
                           minLines: 2,
+                          onChanged: (value) => description = value,
                         ),
                         const SizedBox(height: 10),
                         Row(
                           children: [
                             Expanded(
                               child: _requiredField(
-                                controller: progressController,
+                                initialValue: progressText,
                                 label: 'Progresso',
                                 hint: '0 a 100',
                                 icon: Icons.percent_rounded,
                                 keyboardType: TextInputType.number,
+                                onChanged: (value) => progressText = value,
                               ),
                             ),
                             const SizedBox(width: 10),
@@ -726,17 +734,19 @@ class _GoalDialog {
                         ),
                         const SizedBox(height: 10),
                         _requiredField(
-                          controller: startDateController,
+                          initialValue: startDateText,
                           label: 'Data inicio',
                           hint: 'AAAA-MM-DD',
                           icon: Icons.event_available_outlined,
+                          onChanged: (value) => startDateText = value,
                         ),
                         const SizedBox(height: 10),
                         _requiredField(
-                          controller: endDateController,
+                          initialValue: endDateText,
                           label: 'Data fim',
                           hint: 'AAAA-MM-DD',
                           icon: Icons.event_outlined,
+                          onChanged: (value) => endDateText = value,
                         ),
                       ],
                     ),
@@ -764,12 +774,6 @@ class _GoalDialog {
         );
       },
     );
-
-    titleController.dispose();
-    descriptionController.dispose();
-    progressController.dispose();
-    startDateController.dispose();
-    endDateController.dispose();
   }
 }
 
@@ -908,15 +912,17 @@ Widget _simpleDropdown({
 }
 
 Widget _requiredField({
-  required TextEditingController controller,
+  required String initialValue,
   required String label,
   required String hint,
   required IconData icon,
+  required ValueChanged<String> onChanged,
   int minLines = 1,
   TextInputType? keyboardType,
 }) {
   return TextFormField(
-    controller: controller,
+    initialValue: initialValue,
+    onChanged: onChanged,
     minLines: minLines,
     maxLines: minLines > 1 ? minLines + 1 : 1,
     keyboardType: keyboardType,

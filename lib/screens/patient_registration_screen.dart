@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:vitacare_flutter/core/vitacare_feedback.dart';
 import 'package:vitacare_flutter/core/vitacare_routes.dart';
+import 'package:vitacare_flutter/models/cep_address.dart';
 import 'package:vitacare_flutter/providers/patient_provider.dart';
+import 'package:vitacare_flutter/services/api_service.dart';
 import 'package:vitacare_flutter/theme/vitacare_input_decoration.dart';
 import 'package:vitacare_flutter/widgets/vitacare_glass_card.dart';
 import 'package:vitacare_flutter/widgets/vitacare_page_scaffold.dart';
@@ -23,8 +25,14 @@ class _PatientRegistrationScreenState extends State<PatientRegistrationScreen> {
   final TextEditingController _conditionController = TextEditingController();
   final TextEditingController _caregiverController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _cepController = TextEditingController();
+  final TextEditingController _cityController = TextEditingController();
+  final TextEditingController _stateController = TextEditingController();
+  final TextEditingController _streetController = TextEditingController();
+  final ApiService _apiService = ApiService();
 
   bool _isSaving = false;
+  bool _isSearchingCep = false;
 
   @override
   void dispose() {
@@ -33,7 +41,46 @@ class _PatientRegistrationScreenState extends State<PatientRegistrationScreen> {
     _conditionController.dispose();
     _caregiverController.dispose();
     _phoneController.dispose();
+    _cepController.dispose();
+    _cityController.dispose();
+    _stateController.dispose();
+    _streetController.dispose();
     super.dispose();
+  }
+
+  Future<void> _searchCep() async {
+    FocusScope.of(context).unfocus();
+    setState(() => _isSearchingCep = true);
+
+    try {
+      final CepAddress address = await _apiService.fetchCep(
+        _cepController.text,
+      );
+      if (!mounted) {
+        return;
+      }
+      _cepController.text = address.cep;
+      _cityController.text = address.city;
+      _stateController.text = address.state;
+      _streetController.text = address.street;
+      showVitacareSnackBar(context, 'Endereco preenchido via ViaCEP.');
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      showVitacareSnackBar(
+        context,
+        vitacareFriendlyErrorMessage(
+          error,
+          'Nao foi possivel consultar o CEP.',
+        ),
+        isError: true,
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isSearchingCep = false);
+      }
+    }
   }
 
   Future<void> _savePatient() async {
@@ -67,6 +114,10 @@ class _PatientRegistrationScreenState extends State<PatientRegistrationScreen> {
         chronicCondition: _conditionController.text,
         caregiver: _caregiverController.text,
         phone: _phoneController.text,
+        cep: _cepController.text,
+        city: _cityController.text,
+        state: _stateController.text,
+        street: _streetController.text,
       );
 
       if (!mounted) {
@@ -91,6 +142,10 @@ class _PatientRegistrationScreenState extends State<PatientRegistrationScreen> {
       _conditionController.clear();
       _caregiverController.clear();
       _phoneController.clear();
+      _cepController.clear();
+      _cityController.clear();
+      _stateController.clear();
+      _streetController.clear();
 
       showVitacareSnackBar(
         context,
@@ -206,6 +261,72 @@ class _PatientRegistrationScreenState extends State<PatientRegistrationScreen> {
                         }
                         return null;
                       },
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            controller: _cepController,
+                            keyboardType: TextInputType.number,
+                            decoration: vitacareInputDecoration(
+                              label: 'CEP',
+                              hint: 'Ex: 14010000',
+                              icon: Icons.location_on_outlined,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        SizedBox(
+                          width: 132,
+                          height: 64,
+                          child: FilledButton.icon(
+                            onPressed: _isSearchingCep ? null : _searchCep,
+                            icon: _isSearchingCep
+                                ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : const Icon(Icons.search_rounded),
+                            label: Text(_isSearchingCep ? 'Buscando' : 'Buscar'),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _cityController,
+                      enabled: false,
+                      decoration: vitacareInputDecoration(
+                        label: 'Cidade',
+                        hint: 'Preenchida pelo CEP',
+                        icon: Icons.location_city_outlined,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _stateController,
+                      enabled: false,
+                      decoration: vitacareInputDecoration(
+                        label: 'Estado',
+                        hint: 'UF',
+                        icon: Icons.map_outlined,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _streetController,
+                      enabled: false,
+                      decoration: vitacareInputDecoration(
+                        label: 'Logradouro',
+                        hint: 'Preenchido pelo CEP',
+                        icon: Icons.signpost_outlined,
+                      ),
                     ),
                     const SizedBox(height: 18),
                     VitacarePrimaryButton(

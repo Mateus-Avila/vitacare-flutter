@@ -23,7 +23,8 @@ class PatientProvider extends ChangeNotifier {
 
   Stream<List<CareGoal>> watchCareGoals() => _firestoreService.watchCareGoals();
 
-  Stream<List<Patient>> searchPatients() => _firestoreService.searchPatients();
+  Stream<List<Patient>> searchPatients(String query) =>
+      _firestoreService.searchPatients(query);
 
   Future<void> seedDemoData() => _firestoreService.seedDemoData();
 
@@ -33,6 +34,10 @@ class PatientProvider extends ChangeNotifier {
     required String chronicCondition,
     required String caregiver,
     required String phone,
+    required String cep,
+    required String city,
+    required String state,
+    required String street,
   }) {
     return _firestoreService.addPatient(
       name: name,
@@ -40,6 +45,10 @@ class PatientProvider extends ChangeNotifier {
       chronicCondition: chronicCondition,
       caregiver: caregiver,
       phone: phone,
+      cep: cep,
+      city: city,
+      state: state,
+      street: street,
     );
   }
 
@@ -50,6 +59,10 @@ class PatientProvider extends ChangeNotifier {
     required String chronicCondition,
     required String caregiver,
     required String phone,
+    required String cep,
+    required String city,
+    required String state,
+    required String street,
   }) {
     return _firestoreService.updatePatient(
       patient: patient,
@@ -58,6 +71,10 @@ class PatientProvider extends ChangeNotifier {
       chronicCondition: chronicCondition,
       caregiver: caregiver,
       phone: phone,
+      cep: cep,
+      city: city,
+      state: state,
+      street: street,
     );
   }
 

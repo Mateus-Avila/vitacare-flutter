@@ -14,8 +14,24 @@ class ApiService {
       throw ArgumentError('Informe um CEP com 8 digitos.');
     }
 
+    try {
+      return await _fetchViaCep(cep);
+    } catch (_) {
+      try {
+        return await _fetchBrasilApiCep(cep);
+      } catch (_) {
+        throw StateError(
+          'Nao foi possivel consultar o CEP nas APIs publicas. Verifique sua conexao e tente novamente.',
+        );
+      }
+    }
+  }
+
+  Future<CepAddress> _fetchViaCep(String cep) async {
     final uri = Uri.https('viacep.com.br', '/ws/$cep/json/');
-    final response = await _client.get(uri);
+    final response = await _client
+        .get(uri)
+        .timeout(const Duration(seconds: 8));
 
     if (response.statusCode != 200) {
       throw StateError('Nao foi possivel consultar o CEP agora.');
@@ -27,5 +43,22 @@ class ApiService {
     }
 
     return CepAddress.fromJson(data);
+  }
+
+  Future<CepAddress> _fetchBrasilApiCep(String cep) async {
+    final uri = Uri.https('brasilapi.com.br', '/api/cep/v1/$cep');
+    final response = await _client
+        .get(uri)
+        .timeout(const Duration(seconds: 8));
+
+    if (response.statusCode == 404) {
+      throw StateError('CEP nao encontrado nas APIs publicas.');
+    }
+    if (response.statusCode != 200) {
+      throw StateError('Nao foi possivel consultar o CEP agora.');
+    }
+
+    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    return CepAddress.fromBrasilApiJson(data);
   }
 }

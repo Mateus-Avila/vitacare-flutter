@@ -17,6 +17,16 @@ void showVitacareSnackBar(
     );
 }
 
+String vitacareFriendlyErrorMessage(Object error, String fallback) {
+  if (error is ArgumentError || error is StateError) {
+    return error
+        .toString()
+        .replaceFirst('Invalid argument(s): ', '')
+        .replaceFirst('Bad state: ', '');
+  }
+  return fallback;
+}
+
 Future<void> showVitacareInfoDialog(
   BuildContext context, {
   required String title,

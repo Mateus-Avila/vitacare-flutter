@@ -28,4 +28,16 @@ class CepAddress {
       ddd: json['ddd'] as String? ?? '',
     );
   }
+
+  factory CepAddress.fromBrasilApiJson(Map<String, dynamic> json) {
+    return CepAddress(
+      cep: json['cep'] as String? ?? '',
+      street: json['street'] as String? ?? '',
+      neighborhood: json['neighborhood'] as String? ?? '',
+      city: json['city'] as String? ?? '',
+      state: json['state'] as String? ?? '',
+      ibge: '',
+      ddd: '',
+    );
+  }
 }

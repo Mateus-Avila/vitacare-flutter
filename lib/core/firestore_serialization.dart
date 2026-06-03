@@ -37,3 +37,22 @@ double firestoreDouble(dynamic value, {double fallback = 0}) {
 }
 
 String normalizedSearchText(String value) => value.trim().toLowerCase();
+
+List<String> normalizedSearchTokens(Iterable<String> values) {
+  final tokens = <String>{};
+  for (final value in values) {
+    final normalized = normalizedSearchText(value);
+    if (normalized.isEmpty) {
+      continue;
+    }
+
+    tokens.add(normalized);
+    tokens.addAll(
+      normalized
+          .split(RegExp(r'[^a-zA-Z0-9À-ÿ]+'))
+          .map((token) => token.trim())
+          .where((token) => token.isNotEmpty),
+    );
+  }
+  return tokens.toList()..sort();
+}

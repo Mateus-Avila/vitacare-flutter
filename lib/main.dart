@@ -10,7 +10,6 @@ import 'package:vitacare_flutter/providers/auth_provider.dart';
 import 'package:vitacare_flutter/providers/patient_provider.dart';
 import 'package:vitacare_flutter/screens/about_screen.dart';
 import 'package:vitacare_flutter/screens/care_management_screen.dart';
-import 'package:vitacare_flutter/screens/cep_lookup_screen.dart';
 import 'package:vitacare_flutter/screens/dashboard_screen.dart';
 import 'package:vitacare_flutter/screens/forgot_password_page.dart';
 import 'package:vitacare_flutter/screens/health_record_screen.dart';
@@ -64,8 +63,6 @@ class VitacareApp extends StatelessWidget {
         return const CareManagementScreen();
       case VitacareRoutes.search:
         return const SearchScreen();
-      case VitacareRoutes.apiCep:
-        return const CepLookupScreen();
       case VitacareRoutes.about:
         return const AboutScreen();
       default:

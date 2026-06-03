@@ -23,66 +23,60 @@ class VitacarePageScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final bool showSideNavigation = constraints.maxWidth >= 1180;
+    final bool showSideNavigation = MediaQuery.of(context).size.width >= 1180;
 
-        return Scaffold(
-          appBar: AppBar(
-            title: const Text('Vitacare'),
-            foregroundColor: VitacareColors.primaryStrong,
-            actions: actions,
-          ),
-          drawer: showSideNavigation
-              ? null
-              : VitacareAppDrawer(selectedRoute: selectedRoute),
-          body: Stack(
-            children: [
-              const VitacareBackground(),
-              SafeArea(
-                child: Row(
-                  children: [
-                    if (showSideNavigation)
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 20, 0, 20),
-                        child: SizedBox(
-                          width: 300,
-                          child: Card(
-                            child: VitacareAppDrawer(
-                              selectedRoute: selectedRoute,
-                              embedded: true,
-                            ),
-                          ),
-                        ),
-                      ),
-                    Expanded(
-                      child: Align(
-                        alignment: Alignment.topCenter,
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(
-                            maxWidth: maxContentWidth,
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(20),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                _PageHeader(title: title, subtitle: subtitle),
-                                const SizedBox(height: 20),
-                                Expanded(child: child),
-                              ],
-                            ),
-                          ),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Vitacare'),
+        foregroundColor: VitacareColors.primaryStrong,
+        actions: actions,
+      ),
+      drawer: showSideNavigation
+          ? null
+          : VitacareAppDrawer(selectedRoute: selectedRoute),
+      body: Stack(
+        children: [
+          const VitacareBackground(),
+          SafeArea(
+            child: Row(
+              children: [
+                if (showSideNavigation)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 20, 0, 20),
+                    child: SizedBox(
+                      width: 300,
+                      child: Card(
+                        child: VitacareAppDrawer(
+                          selectedRoute: selectedRoute,
+                          embedded: true,
                         ),
                       ),
                     ),
-                  ],
+                  ),
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.topCenter,
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(maxWidth: maxContentWidth),
+                      child: Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _PageHeader(title: title, subtitle: subtitle),
+                            const SizedBox(height: 20),
+                            Expanded(child: child),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        );
-      },
+        ],
+      ),
     );
   }
 }

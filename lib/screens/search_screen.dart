@@ -39,14 +39,6 @@ class _SearchScreenState extends State<SearchScreen> {
       subtitle:
           'Busque pacientes no Firestore com filtro por uid, texto sem diferenciar maiusculas e ordenacao propria.',
       selectedRoute: VitacareRoutes.search,
-      actions: [
-        IconButton(
-          tooltip: 'Consulta CEP',
-          onPressed: () =>
-              Navigator.pushReplacementNamed(context, VitacareRoutes.apiCep),
-          icon: const Icon(Icons.travel_explore_rounded),
-        ),
-      ],
       child: VitacareGlassCard(
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -109,7 +101,7 @@ class _SearchScreenState extends State<SearchScreen> {
               const SizedBox(height: 12),
               Expanded(
                 child: StreamBuilder<List<Patient>>(
-                  stream: provider.searchPatients(),
+                  stream: provider.searchPatients(_query),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return const Center(child: CircularProgressIndicator());
@@ -155,10 +147,7 @@ class _SearchScreenState extends State<SearchScreen> {
       if (_query.isEmpty) {
         return true;
       }
-      final searchable =
-          '${patient.name} ${patient.chronicCondition} ${patient.caregiver}'
-              .toLowerCase();
-      return searchable.contains(_query);
+      return true;
     }).toList();
 
     switch (_sortOption) {

@@ -113,7 +113,7 @@ As telas possuem estados de carregamento, erro, lista vazia e lista preenchida.
 Tela exclusiva de pesquisa:
 
 - campo de busca;
-- busca por nome, condição ou cuidador;
+- busca por tokens de nome, condição ou cuidador;
 - filtro por `uid`;
 - busca sem diferenciar maiúsculas/minúsculas;
 - ordenação por:
@@ -124,12 +124,13 @@ Tela exclusiva de pesquisa:
 
 ### RF007 - API REST Pública
 
-Tela de consulta de CEP usando a API pública ViaCEP:
+Consulta de CEP integrada ao cadastro e edição de paciente usando a API pública ViaCEP:
 
 - serviço dedicado em `lib/services/api_service.dart`;
 - loading;
 - tratamento de erro;
-- exibição de logradouro, bairro, cidade, UF, IBGE e DDD.
+- preenchimento automático de CEP, cidade, estado e logradouro;
+- gravação dos campos de endereço na coleção `pacientes`.
 
 ## Coleções do Firestore
 
@@ -154,6 +155,11 @@ Tela de consulta de CEP usando a API pública ViaCEP:
 - `condicaoCronica`
 - `cuidador`
 - `telefone`
+- `cep`
+- `cidade`
+- `estado`
+- `logradouro`
+- `termosBusca`
 - `status`
 - `ultimaSistolica`
 - `ultimaDiastolica`
@@ -272,14 +278,14 @@ Se não existir pasta `test/`, o comando `flutter test` pode não executar teste
 3. Confirme que os dados adicionais aparecem em `usuarios/{uid}`.
 4. Faça logout e login com e-mail/senha.
 5. Teste recuperação de senha.
-6. Cadastre um paciente.
-7. Edite o paciente na listagem.
+6. Cadastre um paciente, opcionalmente buscando o endereço por CEP.
+7. Edite o paciente na listagem e teste uma nova busca de CEP.
 8. Cadastre um registro de saúde.
 9. Edite o registro no histórico.
 10. Cadastre atividade e meta em "Ações e Metas".
 11. Edite atividade e meta.
 12. Abra a pesquisa e teste busca/ordenação.
-13. Abra "Consulta CEP" e consulte um CEP válido.
+13. Confirme no Firestore que o endereço do paciente foi salvo quando o CEP foi consultado.
 14. Entre com outro usuário e confirme que os dados anteriores não aparecem.
 
 ## Roteiro do Vídeo de Apresentação

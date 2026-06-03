@@ -10,7 +10,6 @@ class VitacareRoutes {
   static const alerts = '/alerts';
   static const careManagement = '/care-management';
   static const search = '/search';
-  static const apiCep = '/api/cep';
   static const about = '/about';
 
   static const publicRoutes = <String>{login, register, forgotPassword};
@@ -24,7 +23,6 @@ class VitacareRoutes {
     alerts,
     careManagement,
     search,
-    apiCep,
     about,
   };
 }

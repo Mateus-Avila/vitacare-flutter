@@ -56,7 +56,7 @@ class AboutScreen extends StatelessWidget {
                     _AboutSection(
                       title: 'Funcionalidades demonstradas nesta etapa',
                       content:
-                          'O aplicativo apresenta login, cadastro, recuperacao de senha e tela sobre, alem de modulos especificos: cadastro de paciente, listagem em tempo real, registro de dados de saude, historico com indicadores, alertas/status, acoes e metas, pesquisa ordenada e consulta CEP por API REST.',
+                          'O aplicativo apresenta login, cadastro, recuperacao de senha e tela sobre, alem de modulos especificos: cadastro de paciente com consulta CEP por API REST, listagem em tempo real, registro de dados de saude, historico com indicadores, alertas/status, acoes e metas e pesquisa ordenada.',
                     ),
                     const SizedBox(height: 18),
                     _AboutSection(
@@ -68,7 +68,7 @@ class AboutScreen extends StatelessWidget {
                     _AboutSection(
                       title: 'Firebase e API REST',
                       content:
-                          'A versao atual utiliza Firebase Authentication para acesso, Cloud Firestore para usuarios, pacientes, registros, atividades e metas, sempre filtrando dados por uid. O requisito de API publica e demonstrado pela consulta ViaCEP.',
+                          'A versao atual utiliza Firebase Authentication para acesso, Cloud Firestore para usuarios, pacientes, registros, atividades e metas, sempre filtrando dados por uid. O requisito de API publica e demonstrado pela consulta ViaCEP integrada ao cadastro de paciente.',
                     ),
                     const SizedBox(height: 18),
                     _AboutSection(

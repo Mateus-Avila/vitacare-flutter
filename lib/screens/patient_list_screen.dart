@@ -3,8 +3,10 @@ import 'package:provider/provider.dart';
 import 'package:vitacare_flutter/core/vitacare_formatters.dart';
 import 'package:vitacare_flutter/core/vitacare_feedback.dart';
 import 'package:vitacare_flutter/core/vitacare_routes.dart';
+import 'package:vitacare_flutter/models/cep_address.dart';
 import 'package:vitacare_flutter/models/patient.dart';
 import 'package:vitacare_flutter/providers/patient_provider.dart';
+import 'package:vitacare_flutter/services/api_service.dart';
 import 'package:vitacare_flutter/theme/vitacare_colors.dart';
 import 'package:vitacare_flutter/theme/vitacare_input_decoration.dart';
 import 'package:vitacare_flutter/widgets/vitacare_glass_card.dart';
@@ -145,6 +147,13 @@ class _PatientTile extends StatelessWidget {
                       'Cuidador: ${patient.caregiver}',
                       style: const TextStyle(color: VitacareColors.textSoft),
                     ),
+                    if (patient.cep.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        '${patient.city} - ${patient.state} | ${patient.street}',
+                        style: const TextStyle(color: VitacareColors.textSoft),
+                      ),
+                    ],
                     const SizedBox(height: 2),
                     Text(
                       patient.latestRecordAt == null
@@ -191,6 +200,11 @@ class _PatientTile extends StatelessWidget {
   }
 
   void _showPatientDetails(BuildContext context) {
+    final addressText = patient.cep.isEmpty
+        ? ''
+        : 'Endereco: ${patient.street}, ${patient.city} - ${patient.state}\n'
+              'CEP: ${patient.cep}\n';
+
     showDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -202,6 +216,7 @@ class _PatientTile extends StatelessWidget {
           'Condicao principal: ${patient.chronicCondition}\n'
           'Cuidador responsavel: ${patient.caregiver}\n'
           'Telefone: ${patient.phone}\n'
+          '$addressText'
           'Cadastro: ${VitacareFormatters.date(patient.createdAt)}',
         ),
         actions: [
@@ -238,7 +253,13 @@ class _PatientTile extends StatelessWidget {
     );
     final caregiverController = TextEditingController(text: patient.caregiver);
     final phoneController = TextEditingController(text: patient.phone);
+    final cepController = TextEditingController(text: patient.cep);
+    final cityController = TextEditingController(text: patient.city);
+    final stateController = TextEditingController(text: patient.state);
+    final streetController = TextEditingController(text: patient.street);
+    final apiService = ApiService();
     bool isSaving = false;
+    bool isSearchingCep = false;
 
     await showDialog<void>(
       context: context,
@@ -269,8 +290,13 @@ class _PatientTile extends StatelessWidget {
                   chronicCondition: conditionController.text,
                   caregiver: caregiverController.text,
                   phone: phoneController.text,
+                  cep: cepController.text,
+                  city: cityController.text,
+                  state: stateController.text,
+                  street: streetController.text,
                 );
                 if (context.mounted) {
+                  setState(() => isSaving = false);
                   Navigator.pop(dialogContext);
                   showVitacareSnackBar(
                     context,
@@ -286,7 +312,43 @@ class _PatientTile extends StatelessWidget {
                   );
                 }
               } finally {
-                setState(() => isSaving = false);
+                if (isSaving && context.mounted) {
+                  setState(() => isSaving = false);
+                }
+              }
+            }
+
+            Future<void> searchCep() async {
+              setState(() => isSearchingCep = true);
+              try {
+                final CepAddress address = await apiService.fetchCep(
+                  cepController.text,
+                );
+                cepController.text = address.cep;
+                cityController.text = address.city;
+                stateController.text = address.state;
+                streetController.text = address.street;
+                if (context.mounted) {
+                  showVitacareSnackBar(
+                    context,
+                    'Endereco preenchido via ViaCEP.',
+                  );
+                }
+              } catch (error) {
+                if (context.mounted) {
+                  showVitacareSnackBar(
+                    context,
+                    vitacareFriendlyErrorMessage(
+                      error,
+                      'Nao foi possivel consultar o CEP.',
+                    ),
+                    isError: true,
+                  );
+                }
+              } finally {
+                if (context.mounted) {
+                  setState(() => isSearchingCep = false);
+                }
               }
             }
 
@@ -358,6 +420,74 @@ class _PatientTile extends StatelessWidget {
                             ? 'Informe o telefone.'
                             : null,
                       ),
+                      const SizedBox(height: 10),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: TextFormField(
+                              controller: cepController,
+                              keyboardType: TextInputType.number,
+                              decoration: vitacareInputDecoration(
+                                label: 'CEP',
+                                hint: 'Ex: 14010000',
+                                icon: Icons.location_on_outlined,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          SizedBox(
+                            width: 126,
+                            height: 64,
+                            child: FilledButton.icon(
+                              onPressed: isSearchingCep ? null : searchCep,
+                              icon: isSearchingCep
+                                  ? const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : const Icon(Icons.search_rounded),
+                              label: Text(
+                                isSearchingCep ? 'Buscando' : 'Buscar',
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      TextFormField(
+                        controller: cityController,
+                        enabled: false,
+                        decoration: vitacareInputDecoration(
+                          label: 'Cidade',
+                          hint: 'Preenchida pelo CEP',
+                          icon: Icons.location_city_outlined,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      TextFormField(
+                        controller: stateController,
+                        enabled: false,
+                        decoration: vitacareInputDecoration(
+                          label: 'Estado',
+                          hint: 'UF',
+                          icon: Icons.map_outlined,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      TextFormField(
+                        controller: streetController,
+                        enabled: false,
+                        decoration: vitacareInputDecoration(
+                          label: 'Logradouro',
+                          hint: 'Preenchido pelo CEP',
+                          icon: Icons.signpost_outlined,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -389,6 +519,10 @@ class _PatientTile extends StatelessWidget {
     conditionController.dispose();
     caregiverController.dispose();
     phoneController.dispose();
+    cepController.dispose();
+    cityController.dispose();
+    stateController.dispose();
+    streetController.dispose();
   }
 
   Color _statusColor(PatientStatus status) {

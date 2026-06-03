@@ -52,8 +52,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     await showVitacareInfoDialog(
       context,
       title: 'Recuperacao solicitada',
-      message:
-          '${result.message}\n\nNesta etapa academica, o envio e apenas ilustrativo.',
+      message: result.message,
     );
 
     if (!mounted) {

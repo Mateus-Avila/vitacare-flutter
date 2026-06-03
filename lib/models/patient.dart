@@ -10,6 +10,10 @@ class Patient {
     required this.chronicCondition,
     required this.caregiver,
     required this.phone,
+    required this.cep,
+    required this.city,
+    required this.state,
+    required this.street,
     required this.createdAt,
     required this.updatedAt,
     required this.status,
@@ -26,6 +30,10 @@ class Patient {
   final String chronicCondition;
   final String caregiver;
   final String phone;
+  final String cep;
+  final String city;
+  final String state;
+  final String street;
   final DateTime createdAt;
   final DateTime updatedAt;
   final String status;
@@ -46,6 +54,10 @@ class Patient {
       chronicCondition: data['condicaoCronica'] as String? ?? '',
       caregiver: data['cuidador'] as String? ?? '',
       phone: data['telefone'] as String? ?? '',
+      cep: data['cep'] as String? ?? '',
+      city: data['cidade'] as String? ?? '',
+      state: data['estado'] as String? ?? '',
+      street: data['logradouro'] as String? ?? '',
       createdAt: firestoreDate(data['criadoEm']),
       updatedAt: firestoreDate(data['atualizadoEm']),
       status: data['status'] as String? ?? 'atencao',
@@ -73,6 +85,15 @@ class Patient {
       'condicaoCronica': chronicCondition.trim(),
       'cuidador': caregiver.trim(),
       'telefone': phone.trim(),
+      'cep': cep.trim(),
+      'cidade': city.trim(),
+      'estado': state.trim(),
+      'logradouro': street.trim(),
+      'termosBusca': normalizedSearchTokens([
+        name,
+        chronicCondition,
+        caregiver,
+      ]),
       'status': status,
       'criadoEm': FieldValue.serverTimestamp(),
       'atualizadoEm': FieldValue.serverTimestamp(),
@@ -85,6 +106,10 @@ class Patient {
     required String chronicCondition,
     required String caregiver,
     required String phone,
+    required String cep,
+    required String city,
+    required String state,
+    required String street,
   }) {
     return {
       'nome': name.trim(),
@@ -93,6 +118,15 @@ class Patient {
       'condicaoCronica': chronicCondition.trim(),
       'cuidador': caregiver.trim(),
       'telefone': phone.trim(),
+      'cep': cep.trim(),
+      'cidade': city.trim(),
+      'estado': state.trim(),
+      'logradouro': street.trim(),
+      'termosBusca': normalizedSearchTokens([
+        name,
+        chronicCondition,
+        caregiver,
+      ]),
       'atualizadoEm': FieldValue.serverTimestamp(),
     };
   }

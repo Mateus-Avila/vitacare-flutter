@@ -85,83 +85,77 @@ class _DashboardScreenState extends State<DashboardScreen> {
             stream: patientProvider.watchHealthRecords(),
             builder: (context, recordSnapshot) {
               final records = recordSnapshot.data ?? <HealthRecord>[];
-              return LayoutBuilder(
-                builder: (context, constraints) {
-                  final bool isWide = constraints.maxWidth >= 980;
-                  return SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        VitacareGlassCard(
-                          child: Padding(
-                            padding: const EdgeInsets.all(22),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+              final bool isWide = MediaQuery.of(context).size.width >= 980;
+              return SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    VitacareGlassCard(
+                      child: Padding(
+                        padding: const EdgeInsets.all(22),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Bem-vindo, ${authProvider.currentUser?.name ?? 'Profissional'}',
+                              style: Theme.of(context).textTheme.headlineSmall
+                                  ?.copyWith(
+                                    color: VitacareColors.textStrong,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'O VitaCare agora usa Firebase Authentication e Cloud Firestore com dados isolados por usuario.',
+                              style: Theme.of(context).textTheme.bodyLarge
+                                  ?.copyWith(
+                                    color: VitacareColors.textSoft,
+                                    height: 1.5,
+                                  ),
+                            ),
+                            const SizedBox(height: 18),
+                            Wrap(
+                              spacing: 12,
+                              runSpacing: 12,
                               children: [
-                                Text(
-                                  'Bem-vindo, ${authProvider.currentUser?.name ?? 'Profissional'}',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .headlineSmall
-                                      ?.copyWith(
-                                        color: VitacareColors.textStrong,
-                                        fontWeight: FontWeight.w700,
-                                      ),
+                                _StatusChip(
+                                  label:
+                                      '${patients.length} pacientes acompanhados',
+                                  color: VitacareColors.primary,
                                 ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'O VitaCare agora usa Firebase Authentication e Cloud Firestore com dados isolados por usuario.',
-                                  style: Theme.of(context).textTheme.bodyLarge
-                                      ?.copyWith(
-                                        color: VitacareColors.textSoft,
-                                        height: 1.5,
-                                      ),
+                                _StatusChip(
+                                  label:
+                                      '${records.length} registros de saude',
+                                  color: VitacareColors.accent,
                                 ),
-                                const SizedBox(height: 18),
-                                Wrap(
-                                  spacing: 12,
-                                  runSpacing: 12,
-                                  children: [
-                                    _StatusChip(
-                                      label:
-                                          '${patients.length} pacientes acompanhados',
-                                      color: VitacareColors.primary,
-                                    ),
-                                    _StatusChip(
-                                      label:
-                                          '${records.length} registros de saude',
-                                      color: VitacareColors.accent,
-                                    ),
-                                    _StatusChip(
-                                      label:
-                                          '${patientProvider.criticalAlertsCountFrom(patients)} alertas prioritarios',
-                                      color: Colors.red.shade700,
-                                    ),
-                                  ],
+                                _StatusChip(
+                                  label:
+                                      '${patientProvider.criticalAlertsCountFrom(patients)} alertas prioritarios',
+                                  color: Colors.red.shade700,
                                 ),
                               ],
                             ),
-                          ),
+                          ],
                         ),
-                        const SizedBox(height: 16),
-                        if (isWide)
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(child: _buildModules(context)),
-                              const SizedBox(width: 16),
-                              Expanded(child: _buildAcademicSupport(context)),
-                            ],
-                          )
-                        else ...[
-                          _buildModules(context),
-                          const SizedBox(height: 16),
-                          _buildAcademicSupport(context),
-                        ],
-                      ],
+                      ),
                     ),
-                  );
-                },
+                    const SizedBox(height: 16),
+                    if (isWide)
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(child: _buildModules(context)),
+                          const SizedBox(width: 16),
+                          Expanded(child: _buildAcademicSupport(context)),
+                        ],
+                      )
+                    else ...[
+                      _buildModules(context),
+                      const SizedBox(height: 16),
+                      _buildAcademicSupport(context),
+                    ],
+                  ],
+                ),
               );
             },
           );
@@ -195,7 +189,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             const SizedBox(height: 16),
             _ActionButton(
               title: '1. Cadastro de paciente',
-              subtitle: 'Insere documentos na colecao pacientes.',
+              subtitle: 'Insere pacientes e consulta ViaCEP pela API REST.',
               icon: Icons.person_add_alt_1_rounded,
               onTap: () => Navigator.pushReplacementNamed(
                 context,
@@ -254,8 +248,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
             const SizedBox(height: 10),
             _ActionButton(
-              title: '7. Pesquisa e API',
-              subtitle: 'Busca ordenada e consulta ViaCEP.',
+              title: '7. Pesquisa',
+              subtitle: 'Busca ordenada por tokens salvos no Firestore.',
               icon: Icons.search_rounded,
               onTap: () => Navigator.pushReplacementNamed(
                 context,
@@ -301,7 +295,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               icon: Icons.travel_explore_rounded,
               title: 'API REST publica',
               description:
-                  'A consulta de CEP usa ViaCEP em uma tela propria com loading, erro e resultado.',
+                  'A consulta de CEP usa ViaCEP dentro do cadastro de paciente, com loading, erro e preenchimento automatico.',
             ),
             const SizedBox(height: 10),
             _ActionButton(

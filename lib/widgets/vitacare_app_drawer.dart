@@ -85,11 +85,6 @@ class _VitacareNavigationContent extends StatelessWidget {
             icon: Icons.search_rounded,
           ),
           _NavigationDestinationData(
-            label: 'Consulta CEP',
-            route: VitacareRoutes.apiCep,
-            icon: Icons.travel_explore_rounded,
-          ),
-          _NavigationDestinationData(
             label: 'Sobre o App',
             route: VitacareRoutes.about,
             icon: Icons.info_outline_rounded,
