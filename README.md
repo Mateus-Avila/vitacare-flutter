@@ -21,7 +21,7 @@ Projeto acadêmico da disciplina **Programação Mobile II** - UNAERP.
 - FlutterFire CLI
 - HTTP
 - API ViaCEP
-- Firebase Hosting, para publicação futura
+- Firebase Hosting
 
 ## Firebase
 
@@ -306,26 +306,31 @@ O vídeo deve demonstrar:
 
 ## Firebase Hosting
 
-Não publique antes da autorização final.
+O aplicativo está configurado para publicação no Firebase Hosting.
 
-Passo a passo futuro:
+Endereço principal para entrega:
+
+```text
+https://mobile-2-6df82.web.app/
+```
+
+Endereço alternativo do mesmo projeto:
+
+```text
+https://mobile-2-6df82.firebaseapp.com/
+```
+
+O arquivo `firebase.json` aponta a publicação para a pasta `Public` e configura rewrite para `index.html`, mantendo o app Flutter Web como single-page application.
+
+Para publicar uma nova versão, gere o build web e envie para o Firebase Hosting:
 
 ```bash
 flutter build web
-firebase init hosting
-```
-
-Durante o `firebase init hosting`:
-
-- escolha o projeto Firebase já existente;
-- use `build/web` como pasta pública;
-- configure como single-page app, se solicitado.
-
-Depois, somente quando autorizado:
-
-```bash
 firebase deploy
 ```
+
+Caso a pasta pública seja alterada para `build/web`, atualize também o campo `hosting.public` em `firebase.json`.
+
 
 ## Observação Acadêmica
 
